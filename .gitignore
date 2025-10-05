@@ -6,5 +6,5 @@
 build/
 .env
 *.g.dart
-.hive
-.lock
+*.hive
+*.lock
