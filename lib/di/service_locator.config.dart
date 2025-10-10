@@ -12,6 +12,7 @@
 import 'package:easybuild_bot/di/external_modules.dart' as _i739;
 import 'package:easybuild_bot/easybuild_bot.dart' as _i856;
 import 'package:easybuild_bot/hive/models.dart' as _i39;
+import 'package:easybuild_bot/services/groups_service.dart' as _i524;
 import 'package:easybuild_bot/services/services.dart' as _i995;
 import 'package:easybuild_bot/services/users_service.dart' as _i93;
 import 'package:get_it/get_it.dart' as _i174;
@@ -30,6 +31,13 @@ extension GetItInjectableX on _i174.GetIt {
       () => externalModules.usersBox,
       preResolve: true,
     );
+    await gh.singletonAsync<_i738.Box<_i39.BotGroup>>(
+      () => externalModules.groupsBox,
+      preResolve: true,
+    );
+    gh.singleton<_i524.GroupsService>(
+      () => _i524.GroupsService(gh<_i738.Box<_i39.BotGroup>>()),
+    );
     gh.singleton<_i93.UsersService>(
       () => _i93.UsersService(gh<_i738.Box<_i39.BotUser>>()),
     );
@@ -37,6 +45,7 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i856.EasybuildBot(
         gh<String>(instanceName: 'botToken'),
         gh<_i995.UsersService>(),
+        gh<_i995.GroupsService>(),
       ),
     );
     return this;

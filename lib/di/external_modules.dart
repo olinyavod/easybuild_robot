@@ -15,6 +15,13 @@ abstract class ExternalModules {
     return await Hive.openBox<BotUser>('users');
   }
 
+  /// Регистрация Box<BotGroup> как singleton
+  @preResolve
+  @singleton
+  Future<Box<BotGroup>> get groupsBox async {
+    return await Hive.openBox<BotGroup>('groups');
+  }
+
   // Добавьте сюда другие внешние зависимости, например:
   // 
   // @singleton
