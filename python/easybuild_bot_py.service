@@ -1,0 +1,22 @@
+# Файл systemd сервиса для EasyBuild Telegram Bot (Python)
+
+[Unit]
+Description=EasyBuild Telegram Bot (Python)
+After=network.target
+
+[Service]
+Type=simple
+User=olinyavod
+WorkingDirectory=/home/olinyavod/projects/easybuild_bot/python
+Environment=PRODUCTION=true
+# Используйте .env для токена
+EnvironmentFile=/home/olinyavod/projects/easybuild_bot/python/.env
+ExecStart=/home/olinyavod/projects/easybuild_bot/python/.venv/bin/python /home/olinyavod/projects/easybuild_bot/python/main.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=easybuild_bot_py
+
+[Install]
+WantedBy=multi-user.target
