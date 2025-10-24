@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 from telegram.ext import Application
 from src.easybuild_bot.storage import Storage
 from src.easybuild_bot.command_matcher import CommandMatcher
+from src.easybuild_bot.speech_recognition import SpeechRecognitionService
+from src.easybuild_bot.text_to_speech import TextToSpeechService
 from src.easybuild_bot.bot import EasyBuildBot, post_init
 
 
@@ -39,11 +41,40 @@ def main() -> None:
         threshold=0.5
     )
     
+    # Initialize speech recognition service
+    whisper_model = os.getenv("WHISPER_MODEL", "base")
+    speech_service = None
+    try:
+        speech_service = SpeechRecognitionService(
+            model_name=whisper_model,
+            language="ru"
+        )
+        logging.info(f"Speech recognition service initialized with model: {whisper_model}")
+    except Exception as e:
+        logging.warning(f"Failed to initialize speech recognition service: {e}")
+        logging.warning("Bot will run without speech recognition support")
+    
+    # Initialize text-to-speech service
+    tts_speaker = os.getenv("TTS_SPEAKER", "baya")  # Default female voice
+    tts_service = None
+    try:
+        tts_service = TextToSpeechService(
+            language="ru",
+            speaker=tts_speaker,
+            sample_rate=48000
+        )
+        logging.info(f"Text-to-speech service initialized with speaker: {tts_speaker}")
+    except Exception as e:
+        logging.warning(f"Failed to initialize text-to-speech service: {e}")
+        logging.warning("Bot will run without text-to-speech support")
+    
     # Create bot instance with dependencies
     bot = EasyBuildBot(
         storage=storage,
         command_matcher=command_matcher,
-        admin_token=token
+        admin_token=token,
+        speech_service=speech_service,
+        tts_service=tts_service
     )
     
     # Create Telegram application

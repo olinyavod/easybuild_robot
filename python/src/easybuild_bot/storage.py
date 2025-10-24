@@ -95,6 +95,34 @@ class Storage:
             )
         return result
     
+    def find_users_by_display_name(self, display_name: str) -> List[BotUser]:
+        """
+        Find users by display name (partial match).
+        
+        Args:
+            display_name: Display name to search for
+            
+        Returns:
+            List of matching users
+        """
+        users = self._db["users"]
+        result: List[BotUser] = []
+        # Search for users with display_name containing the search term (case-insensitive)
+        for doc in users.find({}):
+            user_display = doc.get("display_name") or ""
+            if display_name.lower() in user_display.lower():
+                result.append(
+                    BotUser(
+                        id=str(doc.get("id")),
+                        user_id=int(doc.get("user_id")),
+                        user_name=str(doc.get("user_name") or ""),
+                        display_name=user_display,
+                        allowed=bool(doc.get("allowed", False)),
+                        is_admin=bool(doc.get("is_admin", False)),
+                    )
+                )
+        return result
+    
     def update_user_allowed(self, user_id: int, allowed: bool) -> None:
         """
         Update user allowed status.
