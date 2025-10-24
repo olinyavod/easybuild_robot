@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
 """
-Тестовый скрипт для проверки работы семантического распознавания команд.
+Test script for checking semantic command recognition.
 """
 import sys
 import os
 
-# Добавляем путь к модулю
+# Add path to module
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
 from easybuild_bot.command_matcher import CommandMatcher
 
 
 def test_command_matching():
-    """Тестирует различные варианты пользовательских сообщений."""
+    """Tests various variants of user messages."""
     
-    print("Инициализация CommandMatcher...")
+    print("Initializing CommandMatcher...")
     matcher = CommandMatcher(threshold=0.5)
     print()
     
-    # Тестовые фразы
+    # Test phrases
     test_phrases = [
         "привет",
         "начать работу",
@@ -35,23 +35,23 @@ def test_command_matching():
         "список пользователей",
         "группы",
         "показать группы",
-        "как дела",  # Не должно совпасть
-        "погода",     # Не должно совпасть
+        "как дела",  # Should not match
+        "погода",     # Should not match
     ]
     
-    print("Тестирование распознавания команд:")
+    print("Testing command recognition:")
     print("=" * 80)
     
     for phrase in test_phrases:
         result = matcher.match_command(phrase)
         if result:
             command, similarity = result
-            print(f"✓ '{phrase}' -> {command} (схожесть: {similarity:.3f})")
+            print(f"✓ '{phrase}' -> {command} (similarity: {similarity:.3f})")
         else:
-            print(f"✗ '{phrase}' -> Не распознано")
+            print(f"✗ '{phrase}' -> Not recognized")
     
     print("=" * 80)
-    print("\nТестирование завершено!")
+    print("\nTesting completed!")
 
 
 if __name__ == "__main__":
