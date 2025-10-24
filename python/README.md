@@ -1,110 +1,110 @@
-# EasyBuild Bot
+# EasyBuild Bot - Python Backend
 
-Telegram бот для управления сборками с семантическим распознаванием команд на русском языке.
+Telegram bot for managing builds with semantic command recognition in Russian language.
 
-## Возможности
+## Features
 
-- 🤖 **Семантическое распознавание команд** - бот понимает естественный язык
-- 🔐 **Управление доступом** - контроль пользователей и групп
-- 📦 **Управление сборками** - выбор и скачивание APK
-- 🇷🇺 **Поддержка русского языка** - использует модель ruBert-tiny от Сбербанка
+- 🤖 **Semantic Command Recognition** - Bot understands natural language
+- 🔐 **Access Management** - User and group control
+- 📦 **Build Management** - Select and download APK builds
+- 🇷🇺 **Russian Language Support** - Uses ruBert-tiny model by Sberbank
 
-## Установка
+## Installation
 
-1. Установите зависимости:
+1. Install dependencies:
 ```bash
 cd python
 pip install -r requirements.txt
 ```
 
-2. Создайте файл `.env` с токеном бота:
+2. Create `.env` file with bot token:
 ```env
 BOT_TOKEN=your_bot_token_here
 ```
 
-3. Настройте Privacy Mode в BotFather:
-   - Напишите @BotFather
-   - Выполните `/mybots`
-   - Выберите вашего бота
+3. Configure Privacy Mode in BotFather:
+   - Message @BotFather
+   - Run `/mybots`
+   - Select your bot
    - Bot Settings → Group Privacy → **Turn off**
 
-## Запуск
+## Running
 
 ```bash
 cd python
 python main.py
 ```
 
-## Тестирование
+## Testing
 
-Протестировать семантическое распознавание команд:
+Test semantic command recognition:
 
 ```bash
 cd python
 python test_command_matcher.py
 ```
 
-## Примеры использования
+## Usage Examples
 
-Бот понимает естественные фразы на русском языке:
+The bot understands natural phrases in Russian:
 
-### Команда `/start`
-- "привет"
-- "начать работу"
-- "старт"
+### `/start` command
+- "привет" (hello)
+- "начать работу" (start working)
+- "старт" (start)
 
-### Команда `/help`
-- "помощь"
-- "помоги мне"
-- "что ты умеешь"
+### `/help` command
+- "помощь" (help)
+- "помоги мне" (help me)
+- "что ты умеешь" (what can you do)
 
-### Команда `/build`
-- "покажи сборки"
-- "сборка"
-- "собрать apk"
+### `/build` command
+- "покажи сборки" (show builds)
+- "сборка" (build)
+- "собрать apk" (build apk)
 
-### Команда `/register_group`
-- "зарегистрировать группу"
-- "добавить группу"
+### `/register_group` command
+- "зарегистрировать группу" (register group)
+- "добавить группу" (add group)
 
-### Команда `/users` (админ)
-- "пользователи"
-- "список пользователей"
+### `/users` command (admin only)
+- "пользователи" (users)
+- "список пользователей" (user list)
 
-### Команда `/groups` (админ)
-- "группы"
-- "показать группы"
+### `/groups` command (admin only)
+- "группы" (groups)
+- "показать группы" (show groups)
 
-## Использование в группах
+## Using in Groups
 
-В группах бот отвечает только когда:
-- Вы упоминаете его через `@bot_username`
-- Отвечаете на его сообщение
+In groups, the bot responds only when:
+- You mention it via `@bot_username`
+- You reply to its message
 
-Пример:
+Example:
 ```
 @easy_build_robot покажи сборки
 ```
 
-Бот автоматически распознает, что вы хотите выполнить команду `/build`, и покажет список доступных сборок.
+The bot will automatically recognize that you want to execute the `/build` command and show the list of available builds.
 
-## Архитектура
+## Architecture
 
-- `bot.py` - основная логика бота
-- `command_matcher.py` - семантическое распознавание команд с использованием ruBert-tiny
-- `storage.py` - работа с базой данных (MontyDB)
-- `models.py` - модели данных
+- `bot.py` - Main bot logic
+- `command_matcher.py` - Semantic command recognition using ruBert-tiny
+- `storage.py` - Database operations (MontyDB)
+- `models.py` - Data models
 
-## Модель распознавания
+## Recognition Model
 
-Бот использует компактную модель **cointegrated/rubert-tiny** (~45 МБ) от российского разработчика для семантического сопоставления сообщений с командами.
+The bot uses the compact **cointegrated/rubert-tiny** model (~45 MB) by a Russian developer for semantic matching of messages with commands.
 
-Параметры:
-- Порог схожести: 0.5 (можно настроить)
-- Метод: косинусное сходство эмбеддингов
+Parameters:
+- Similarity threshold: 0.5 (configurable)
+- Method: Cosine similarity of embeddings
 
-## Требования
+## Requirements
 
 - Python 3.8+
-- 200+ МБ свободного места (для модели и зависимостей)
-- Интернет для первой загрузки модели
+- 200+ MB free space (for model and dependencies)
+- Internet connection for first model download
