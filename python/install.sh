@@ -26,6 +26,7 @@ echo "Для запуска бота:"
 echo "  1. Создайте файл .env с вашим BOT_TOKEN"
 echo "  2. Запустите: python3 main.py"
 echo ""
-echo "Для тестирования распознавания команд:"
-echo "  python3 test_command_matcher.py"
+echo "Для тестирования команд:"
+echo "  python3 tests/test_dynamic_commands.py"
+
 

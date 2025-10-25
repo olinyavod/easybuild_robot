@@ -5,10 +5,29 @@ A Telegram bot for managing builds with semantic command recognition in Russian 
 ## 🌟 Features
 
 - 🤖 **Semantic Command Recognition** - Bot understands natural language
+- 🎯 **Command Pattern Architecture** - Clean, scalable, maintainable code
 - 🔐 **Access Management** - User and group control
 - 📦 **Build Management** - Select and download APK builds
 - 🇷🇺 **Russian Language Support** - Uses ruBert-tiny model by Sberbank
 - 🔄 **Cross-Platform** - Python backend + Dart/Flutter frontend
+
+## ✨ New: Command Pattern Architecture
+
+The bot now uses the **Command Pattern** for better code organization and scalability.
+
+**Benefits:**
+- ✅ Each command is a separate, self-contained class
+- ✅ Easy to add new commands (1 file + 1 line registration)
+- ✅ Built-in access control per command
+- ✅ Semantic tags included with each command
+- ✅ Highly testable and maintainable
+
+**Documentation:**
+- 📖 [Quick Start Guide](docs/QUICKSTART.md) - Get started in 5 minutes
+- 📖 [Detailed Guide](docs/guides/COMMAND_PATTERN_GUIDE.md) - Complete tutorial
+- 📊 [Architecture Diagrams](docs/architecture/ARCHITECTURE.md) - Visual overview
+- 📊 [Comparison](docs/architecture/COMPARISON.md) - Before/After comparison
+- 📚 [Full Documentation Index](docs/README.md) - All documentation
 
 ## 📁 Project Structure
 
@@ -20,15 +39,24 @@ easybuild_bot/
 │   ├── main.py      # Bot entry point
 │   └── requirements.txt
 │
-└── dart/            # Dart/Flutter Application
-    ├── lib/         # Library code
-    ├── bin/         # CLI application
-    └── test/        # Unit tests
+├── dart/            # Dart/Flutter Application
+│   ├── lib/         # Library code
+│   ├── bin/         # CLI application
+│   └── test/        # Unit tests
+│
+└── docs/            # 📚 Project Documentation
+    ├── README.md                   # Documentation index
+    ├── QUICKSTART.md               # Quick start guide
+    ├── DOCUMENTATION_STRUCTURE.md  # How to organize docs
+    ├── guides/                     # User guides
+    ├── architecture/               # Architecture docs
+    ├── migration/                  # Migration history
+    └── api/                        # API documentation
 ```
 
 ## 🚀 Quick Start
 
-### Python Bot
+### Python Bot (New Command Pattern Architecture)
 
 1. **Install dependencies:**
    ```bash
@@ -36,9 +64,11 @@ easybuild_bot/
    pip install -r requirements.txt
    ```
 
-2. **Create `.env` file with bot token:**
-   ```env
-   BOT_TOKEN=your_bot_token_here
+2. **Set environment variables:**
+   ```bash
+   export BOT_TOKEN="your_bot_token_here"
+   export ADMIN_TOKEN="your_admin_token"
+   export DB_PATH="./data"
    ```
 
 3. **Configure Privacy Mode in BotFather:**
@@ -51,6 +81,8 @@ easybuild_bot/
    ```bash
    python main.py
    ```
+
+📖 See [docs/QUICKSTART.md](docs/QUICKSTART.md) for detailed instructions.
 
 ### Dart Application
 
@@ -112,18 +144,43 @@ The bot will automatically recognize that you want to execute the `/build` comma
 ## 🏗 Architecture
 
 ### Python Backend
-- `bot.py` - Main bot logic
-- `command_matcher.py` - Semantic command recognition using ruBert-tiny
+
+**New Architecture (Command Pattern):**
+```
+commands/
+├── base.py              # Abstract Command class
+├── registry.py          # Command registry with semantic matching
+├── executor.py          # Command executor with access control
+├── factory.py           # Command system factory
+└── implementations/     # Concrete command implementations
+    ├── start_command.py
+    ├── help_command.py
+    ├── build_command.py
+    └── ... (8 commands total)
+
+bot_v2.py               # New bot implementation
+```
+
+**Core Components:**
+- `bot.py` - Main bot logic with Command Pattern
+- `commands/` - Command Pattern implementation
+  - `registry.py` - Semantic command matching
+  - `executor.py` - Command execution with access control
+  - `implementations/` - All command implementations
 - `storage.py` - Database operations (MontyDB)
 - `models.py` - Data models
+- `di.py` - Dependency Injection container
+- `main.py` - Entry point with DI Container
 
 ### Recognition Model
 
-The bot uses the compact **cointegrated/rubert-tiny** model (~45 MB) for semantic matching of messages with commands.
+The bot uses the compact **cointegrated/rubert-tiny** model (~45 MB) for semantic matching.
 
 Parameters:
 - Similarity threshold: 0.5 (configurable)
 - Method: Cosine similarity of embeddings
+
+📊 See [docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) for detailed architecture diagrams.
 
 ## 📋 Requirements
 
@@ -146,11 +203,16 @@ Database files are automatically excluded from git via `.gitignore`.
 
 ## 🧪 Testing
 
-Test semantic command recognition:
-
+**Test Command Pattern:**
 ```bash
 cd python
-python test_command_matcher.py
+pytest tests/test_command_pattern.py -v
+```
+
+**Test Dynamic Commands:**
+```bash
+cd python
+python tests/test_dynamic_commands.py
 ```
 
 ## 🔧 Deployment
