@@ -54,6 +54,7 @@ def main() -> None:
     # Get dependencies from container
     logger.info("Resolving dependencies from container...")
     storage = container.storage()
+    access_control = container.access_control()
     command_registry = container.command_registry()
     command_executor = container.command_executor()
     
@@ -90,6 +91,7 @@ def main() -> None:
     logger.info("Creating bot instance with Command Pattern architecture...")
     bot = EasyBuildBot(
         storage=storage,
+        access_control=access_control,
         command_registry=command_registry,
         command_executor=command_executor,
         admin_token=admin_token,

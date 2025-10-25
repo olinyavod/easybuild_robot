@@ -8,6 +8,7 @@
 | ⚡ Быстрый старт | Установка и запуск | [docs/QUICKSTART.md](QUICKSTART.md) |
 | 📖 Структура | Как организована документация | [docs/DOCUMENTATION_STRUCTURE.md](DOCUMENTATION_STRUCTURE.md) |
 | ✅ Реорганизация | Что было сделано | [docs/REORGANIZATION_COMPLETE.md](REORGANIZATION_COMPLETE.md) |
+| 🏗️ Управление проектами | Система управления проектами | [docs/PROJECTS_MANAGEMENT.md](PROJECTS_MANAGEMENT.md) |
 
 ## 📘 Руководства (guides/)
 

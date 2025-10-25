@@ -15,18 +15,28 @@ from .implementations import (
     GroupsCommand,
     RegisterGroupCommand,
     UnblockUserCommand,
-    BlockUserCommand
+    BlockUserCommand,
+    ProjectsCommand,
+    AddProjectCommand,
+    EditProjectCommand,
+    DeleteProjectCommand
 )
+# Import callback commands
+from .implementations.allow_user_callback import AllowUserCallbackCommand
+from .implementations.block_user_callback import BlockUserCallbackCommand
+from .implementations.unblock_user_callback import UnblockUserCallbackCommand
+from .implementations.build_apk_callback import BuildApkCallbackCommand
 
 if TYPE_CHECKING:
     from ..storage import Storage
+    from ..access_control import AccessControlService
 
 logger = logging.getLogger(__name__)
 
 
 def create_command_system(
     storage: 'Storage',
-    admin_token: str,
+    access_control: 'AccessControlService',
     model_name: str = "cointegrated/rubert-tiny",
     threshold: float = 0.5
 ) -> tuple[CommandRegistry, CommandExecutor]:
@@ -35,7 +45,7 @@ def create_command_system(
     
     Args:
         storage: Database storage instance
-        admin_token: Admin token for authorization
+        access_control: Access control service instance
         model_name: Model name for semantic matching
         threshold: Similarity threshold for command matching
         
@@ -49,14 +59,23 @@ def create_command_system(
     
     # Create and register all commands
     commands = [
-        StartCommand(storage, admin_token),
-        HelpCommand(storage, admin_token),
-        BuildCommand(storage, admin_token),
-        UsersCommand(storage, admin_token),
-        GroupsCommand(storage, admin_token),
-        RegisterGroupCommand(storage, admin_token),
-        UnblockUserCommand(storage, admin_token),
-        BlockUserCommand(storage, admin_token),
+        StartCommand(storage, access_control),
+        HelpCommand(storage, access_control),
+        BuildCommand(storage, access_control),
+        UsersCommand(storage, access_control),
+        GroupsCommand(storage, access_control),
+        RegisterGroupCommand(storage, access_control),
+        UnblockUserCommand(storage, access_control),
+        BlockUserCommand(storage, access_control),
+        ProjectsCommand(storage, access_control),
+        AddProjectCommand(storage, access_control),
+        EditProjectCommand(storage, access_control),
+        DeleteProjectCommand(storage, access_control),
+        # Callback commands
+        AllowUserCallbackCommand(storage, access_control),
+        BlockUserCallbackCommand(storage, access_control),
+        UnblockUserCallbackCommand(storage, access_control),
+        BuildApkCallbackCommand(storage, access_control),
     ]
     
     for cmd in commands:

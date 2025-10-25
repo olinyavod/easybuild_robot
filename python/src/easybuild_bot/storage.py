@@ -2,7 +2,7 @@
 Database storage module using MontyDB.
 """
 from typing import List, Optional
-from .models import BotUser, BotGroup
+from .models import BotUser, BotGroup, Project, ProjectType
 from montydb import MontyClient
 
 
@@ -25,10 +25,14 @@ class Storage:
         """Create indexes for collections."""
         users = self._db["users"]
         groups = self._db["groups"]
+        projects = self._db["projects"]
+        
         users.create_index("user_id", unique=True)
         users.create_index("id", unique=True)
         groups.create_index("group_id", unique=True)
         groups.create_index("id", unique=True)
+        projects.create_index("id", unique=True)
+        projects.create_index("name")
     
     # User operations
     
@@ -200,4 +204,173 @@ class Storage:
                 )
             )
         return result
+    
+    # Project operations
+    
+    def add_project(self, project: Project) -> None:
+        """
+        Add or update project in database.
+        
+        Args:
+            project: Project to add or update
+        """
+        projects = self._db["projects"]
+        doc = {
+            "id": project.id,
+            "name": project.name,
+            "project_type": project.project_type.value,
+            "git_url": project.git_url,
+            "project_file_path": project.project_file_path,
+            "local_repo_path": project.local_repo_path,
+            "dev_branch": project.dev_branch,
+            "release_branch": project.release_branch,
+            "allowed_group_ids": project.allowed_group_ids,
+            "tags": project.tags,
+            "description": project.description,
+        }
+        projects.update_one({"id": project.id}, {"$set": doc}, upsert=True)
+    
+    def get_project_by_id(self, project_id: str) -> Optional[Project]:
+        """
+        Get project by ID.
+        
+        Args:
+            project_id: Project ID
+            
+        Returns:
+            Project or None if not found
+        """
+        projects = self._db["projects"]
+        doc = projects.find_one({"id": project_id})
+        if not doc:
+            return None
+        return self._doc_to_project(doc)
+    
+    def get_project_by_name(self, name: str) -> Optional[Project]:
+        """
+        Get project by name (case-insensitive).
+        
+        Args:
+            name: Project name
+            
+        Returns:
+            Project or None if not found
+        """
+        projects = self._db["projects"]
+        # Search case-insensitive
+        for doc in projects.find({}):
+            if doc.get("name", "").lower() == name.lower():
+                return self._doc_to_project(doc)
+        return None
+    
+    def get_all_projects(self) -> List[Project]:
+        """
+        Get all projects from database.
+        
+        Returns:
+            List of all projects
+        """
+        projects = self._db["projects"]
+        result: List[Project] = []
+        for doc in projects.find({}):
+            result.append(self._doc_to_project(doc))
+        return result
+    
+    def find_projects_by_tag(self, tag: str) -> List[Project]:
+        """
+        Find projects by tag.
+        
+        Args:
+            tag: Tag to search for
+            
+        Returns:
+            List of matching projects
+        """
+        projects = self._db["projects"]
+        result: List[Project] = []
+        # Search for projects with matching tag
+        for doc in projects.find({}):
+            tags = doc.get("tags", [])
+            if tag.lower() in [t.lower() for t in tags]:
+                result.append(self._doc_to_project(doc))
+        return result
+    
+    def get_projects_for_group(self, group_id: int) -> List[Project]:
+        """
+        Get all projects available for a specific group.
+        
+        Args:
+            group_id: Telegram group ID
+            
+        Returns:
+            List of projects available for the group
+        """
+        projects = self._db["projects"]
+        result: List[Project] = []
+        for doc in projects.find({}):
+            allowed_groups = doc.get("allowed_group_ids", [])
+            # If no groups specified, project is available for all groups
+            if not allowed_groups or group_id in allowed_groups:
+                result.append(self._doc_to_project(doc))
+        return result
+    
+    def delete_project(self, project_id: str) -> bool:
+        """
+        Delete project by ID.
+        
+        Args:
+            project_id: Project ID
+            
+        Returns:
+            True if project was deleted, False if not found
+        """
+        projects = self._db["projects"]
+        result = projects.delete_one({"id": project_id})
+        return result.deleted_count > 0
+    
+    def update_project_groups(self, project_id: str, group_ids: List[int]) -> None:
+        """
+        Update allowed groups for a project.
+        
+        Args:
+            project_id: Project ID
+            group_ids: List of allowed group IDs
+        """
+        projects = self._db["projects"]
+        projects.update_one({"id": project_id}, {"$set": {"allowed_group_ids": group_ids}})
+    
+    def update_project_tags(self, project_id: str, tags: List[str]) -> None:
+        """
+        Update tags for a project.
+        
+        Args:
+            project_id: Project ID
+            tags: List of tags
+        """
+        projects = self._db["projects"]
+        projects.update_one({"id": project_id}, {"$set": {"tags": tags}})
+    
+    def _doc_to_project(self, doc: dict) -> Project:
+        """
+        Convert database document to Project object.
+        
+        Args:
+            doc: Database document
+            
+        Returns:
+            Project object
+        """
+        return Project(
+            id=str(doc.get("id")),
+            name=str(doc.get("name", "")),
+            project_type=ProjectType(doc.get("project_type", "flutter")),
+            git_url=str(doc.get("git_url", "")),
+            project_file_path=str(doc.get("project_file_path", "")),
+            local_repo_path=str(doc.get("local_repo_path", "")),
+            dev_branch=str(doc.get("dev_branch", "develop")),
+            release_branch=str(doc.get("release_branch", "main")),
+            allowed_group_ids=list(doc.get("allowed_group_ids", [])),
+            tags=list(doc.get("tags", [])),
+            description=doc.get("description"),
+        )
 

@@ -36,16 +36,16 @@ class Command(ABC):
     - Semantic tags for matching
     """
     
-    def __init__(self, storage, admin_token: str):
+    def __init__(self, storage, access_control):
         """
         Initialize command with dependencies.
         
         Args:
             storage: Database storage instance
-            admin_token: Admin token for authorization
+            access_control: Access control service instance
         """
         self.storage = storage
-        self.admin_token = admin_token
+        self.access_control = access_control
     
     @abstractmethod
     def get_command_name(self) -> str:
@@ -104,7 +104,7 @@ class Command(ABC):
     
     async def _check_user_access(self, update: Update, require_admin: bool = False) -> tuple[bool, Optional[str]]:
         """
-        Helper method to check user access.
+        Helper method to check user access using AccessControlService.
         
         Args:
             update: Telegram update
@@ -113,32 +113,9 @@ class Command(ABC):
         Returns:
             Tuple (has_access: bool, error_message: Optional[str])
         """
-        user = update.effective_user
-        if not user:
-            return False, "Не удалось определить пользователя"
-        
-        existing = self.storage.get_user_by_user_id(user.id)
-        
-        # Auto-create user if doesn't exist
-        if existing is None:
-            from ..models import BotUser
-            self.storage.add_user(BotUser(
-                id=str(user.id),
-                user_id=user.id,
-                user_name=user.username or '',
-                display_name=user.full_name
-            ))
-            existing = self.storage.get_user_by_user_id(user.id)
-        
-        # Check admin access
-        if require_admin:
-            if existing and existing.is_admin:
-                return True, None
-            return False, "У вас нет прав администратора"
-        
-        # Check regular access
-        if existing and (existing.allowed or existing.is_admin):
-            return True, None
-        
-        return False, "Вы не имеете доступа к боту. Пожалуйста, обратитесь к администратору."
+        return await self.access_control.check_user_access(
+            update=update,
+            require_admin=require_admin,
+            send_error_message=False  # Commands handle error messages themselves
+        )
 

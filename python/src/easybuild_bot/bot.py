@@ -28,6 +28,7 @@ class EasyBuildBot:
     def __init__(
         self, 
         storage: Storage,
+        access_control,
         command_registry: CommandRegistry,
         command_executor: CommandExecutor,
         admin_token: str,
@@ -39,13 +40,15 @@ class EasyBuildBot:
         
         Args:
             storage: Database storage instance
+            access_control: Access control service instance
             command_registry: Command registry for command lookup
             command_executor: Command executor for running commands
-            admin_token: Admin token for authorization
+            admin_token: Admin token for authorization (used only in admin conversation)
             speech_service: Speech recognition service instance (optional)
             tts_service: Text-to-speech service instance (optional)
         """
         self.storage = storage
+        self.access_control = access_control
         self.command_registry = command_registry
         self.command_executor = command_executor
         self.admin_token = admin_token
@@ -53,42 +56,27 @@ class EasyBuildBot:
         self.tts_service = tts_service
     
     async def request_access(self, update: Update, context: ContextTypes.DEFAULT_TYPE, is_replay: bool = True) -> bool:
-        """Check user access to bot."""
-        user = update.effective_user
-        if not user:
-            return False
-
-        existing = self.storage.get_user_by_user_id(user.id)
-        if existing is None:
-            self.storage.add_user(BotUser(
-                id=str(user.id),
-                user_id=user.id,
-                user_name=user.username or '',
-                display_name=user.full_name
-            ))
-            existing = self.storage.get_user_by_user_id(user.id)
-
-        if existing and existing.is_admin:
-            return True
-
-        if not existing or not existing.allowed:
-            if is_replay:
-                await update.effective_message.reply_text("Вы не имеете доступа к боту. Пожалуйста, обратитесь к администратору.")
-            return False
-
-        return True
+        """
+        Check user access to bot.
+        Delegates to AccessControlService.
+        """
+        has_access, _ = await self.access_control.check_user_access(
+            update=update,
+            require_admin=False,
+            send_error_message=is_replay
+        )
+        return has_access
 
     async def request_admin_access(self, update: Update, context: ContextTypes.DEFAULT_TYPE, is_replay: bool = True) -> bool:
-        """Check admin access."""
-        user = update.effective_user
-        if not user:
-            return False
-        existing = self.storage.get_user_by_user_id(user.id)
-        if existing and existing.is_admin:
-            return True
-        if is_replay:
-            await update.effective_message.reply_text("Вы не имеете доступа к боту. Пожалуйста, обратитесь к администратору.")
-        return False
+        """
+        Check admin access.
+        Delegates to AccessControlService.
+        """
+        has_access, _ = await self.access_control.check_admin_access(
+            update=update,
+            send_error_message=is_replay
+        )
+        return has_access
     
     async def _execute_command_by_name(self, command_name: str, update: Update, context: ContextTypes.DEFAULT_TYPE, params: dict = None) -> None:
         """
@@ -153,95 +141,55 @@ class EasyBuildBot:
         """Handle /unblock_user command."""
         await self._execute_command_by_name("/unblock_user", update, context)
     
-    # Callback handlers (remain unchanged as they handle UI interactions)
-    async def cb_allow_user(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handle allow user callback."""
+    async def cmd_projects(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /projects command."""
+        await self._execute_command_by_name("/projects", update, context)
+    
+    async def cmd_add_project(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /add_project command."""
+        await self._execute_command_by_name("/add_project", update, context)
+    
+    async def cmd_edit_project(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /edit_project command."""
+        await self._execute_command_by_name("/edit_project", update, context)
+    
+    async def cmd_delete_project(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /delete_project command."""
+        await self._execute_command_by_name("/delete_project", update, context)
+    
+    # Callback handlers - delegate to callback commands
+    async def handle_callback_query(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """
+        Generic callback query handler that delegates to callback commands.
+        """
         query = update.callback_query
         if not query or not query.data:
             return
-        if not await self.request_admin_access(update, context, is_replay=False):
-            await query.answer(text="У вас нет прав администратора", show_alert=False)
-            return
-        if not query.data.startswith("allow_user_"):
-            return
-        user_id = int(query.data.split("_")[-1])
-        existing = self.storage.get_user_by_user_id(user_id)
-        if not existing:
-            await query.answer(text="Пользователь не найден", show_alert=False)
-            return
-        self.storage.update_user_allowed(user_id, True)
-        await query.answer(text="Доступ предоставлен ✅", show_alert=False)
-        users = self.storage.get_all_users()
-        not_allowed = [u for u in users if not u.allowed]
-        if not not_allowed:
-            await query.edit_message_text("Все пользователи имеют доступ.")
-        else:
-            from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-            keyboard = [[InlineKeyboardButton(u.display_name or f"User {u.user_id}", callback_data=f"allow_user_{u.user_id}")] for u in not_allowed]
-            await query.edit_message_text("Пользователи без доступа:\nНажмите на кнопку, чтобы предоставить доступ:", reply_markup=InlineKeyboardMarkup(keyboard))
-    
-    async def cb_unblock_user(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handle unblock user callback."""
-        query = update.callback_query
-        if not query or not query.data:
-            return
-        if not await self.request_admin_access(update, context, is_replay=False):
-            await query.answer(text="У вас нет прав администратора", show_alert=False)
-            return
-        if not query.data.startswith("unblock_"):
-            return
         
-        user_id = int(query.data.split("_")[-1])
-        existing = self.storage.get_user_by_user_id(user_id)
-        if not existing:
-            await query.answer(text="Пользователь не найден", show_alert=False)
-            return
+        # Find matching callback command
+        for command in self.command_registry.get_all_commands():
+            # Check if this is a callback command with a pattern
+            if hasattr(command, 'get_callback_pattern'):
+                import re
+                pattern = command.get_callback_pattern()
+                if re.match(pattern, query.data):
+                    # Create context and execute
+                    cmd_ctx = CommandContext(
+                        update=update,
+                        context=context,
+                        params={}
+                    )
+                    
+                    result = await self.command_executor.execute_command(command, cmd_ctx)
+                    
+                    if not result.success and result.error:
+                        await query.answer(text=result.error, show_alert=True)
+                    
+                    return
         
-        if existing.allowed:
-            await query.answer(text="Пользователь уже имеет доступ", show_alert=False)
-        else:
-            self.storage.update_user_allowed(user_id, True)
-            await query.answer(text="✅ Пользователь разблокирован", show_alert=True)
-        
-        await query.edit_message_text(
-            f"✅ Пользователь {existing.display_name or existing.user_name} разблокирован!"
-        )
-    
-    async def cb_block_user(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handle block user callback."""
-        query = update.callback_query
-        if not query or not query.data:
-            return
-        if not await self.request_admin_access(update, context, is_replay=False):
-            await query.answer(text="У вас нет прав администратора", show_alert=False)
-            return
-        if not query.data.startswith("block_"):
-            return
-        
-        user_id = int(query.data.split("_")[-1])
-        existing = self.storage.get_user_by_user_id(user_id)
-        if not existing:
-            await query.answer(text="Пользователь не найден", show_alert=False)
-            return
-        
-        if not existing.allowed:
-            await query.answer(text="Пользователь уже заблокирован", show_alert=False)
-        else:
-            self.storage.update_user_allowed(user_id, False)
-            await query.answer(text="🔒 Пользователь заблокирован", show_alert=True)
-        
-        await query.edit_message_text(
-            f"🔒 Пользователь {existing.display_name or existing.user_name} заблокирован!"
-        )
-    
-    async def cb_build_apk_checklist_prod(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handle build APK checklist prod callback."""
-        if not await self.request_access(update, context):
-            return
-        await update.effective_message.reply_text("Сборка APK Autolab - Checklist для Prod-среды")
-        from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Скачать", url="http://144.31.213.13/downloads/checklis_app/app-release.apk")]])
-        await update.effective_message.reply_text("Скачайте сборку APK Autolab - Checklist для Prod-среды по ссылке:", reply_markup=keyboard)
+        # No matching callback command found
+        logger.warning(f"No callback command found for: {query.data}")
+        await query.answer(text="Неизвестное действие", show_alert=True)
     
     async def send_voice_reply(self, message, text: str) -> bool:
         """Send text as voice message."""
@@ -542,11 +490,13 @@ class EasyBuildBot:
         app.add_handler(CommandHandler("register_group", self.cmd_register_group))
         app.add_handler(CommandHandler("block_user", self.cmd_block_user))
         app.add_handler(CommandHandler("unblock_user", self.cmd_unblock_user))
+        app.add_handler(CommandHandler("projects", self.cmd_projects))
+        app.add_handler(CommandHandler("add_project", self.cmd_add_project))
+        app.add_handler(CommandHandler("edit_project", self.cmd_edit_project))
+        app.add_handler(CommandHandler("delete_project", self.cmd_delete_project))
 
-        app.add_handler(CallbackQueryHandler(self.cb_allow_user, pattern=r"^allow_user_\d+$"))
-        app.add_handler(CallbackQueryHandler(self.cb_unblock_user, pattern=r"^unblock_\d+$"))
-        app.add_handler(CallbackQueryHandler(self.cb_block_user, pattern=r"^block_\d+$"))
-        app.add_handler(CallbackQueryHandler(self.cb_build_apk_checklist_prod, pattern=r"^build_apk_checklist_prod$"))
+        # Generic callback handler that routes to callback commands
+        app.add_handler(CallbackQueryHandler(self.handle_callback_query))
 
         admin_conv = ConversationHandler(
             entry_points=[CommandHandler("admin", self.admin_start)],
@@ -568,7 +518,7 @@ class EasyBuildBot:
 
 async def post_init(app: Application):
     """Post initialization hook for setting bot commands."""
-    # Команды для приватных чатов (личный чат = админка, все команды видны)
+    # Commands for private chats (private chat = admin panel, all commands visible)
     await app.bot.set_my_commands([
         BotCommand("start", "Начать работу с ботом"),
         BotCommand("help", "Показать справку"),
@@ -579,14 +529,19 @@ async def post_init(app: Application):
         BotCommand("block_user", "🔒 Заблокировать пользователя (админ)"),
         BotCommand("unblock_user", "🔓 Разблокировать пользователя (админ)"),
         BotCommand("groups", "👥 Список групп (админ)"),
+        BotCommand("projects", "📦 Список проектов"),
+        BotCommand("add_project", "➕ Добавить проект (админ)"),
+        BotCommand("edit_project", "✏️ Редактировать проект (админ)"),
+        BotCommand("delete_project", "🗑️ Удалить проект (админ)"),
     ], scope=BotCommandScopeAllPrivateChats())
     
-    # Команды для групп (только базовые пользовательские)
+    # Commands for groups (only basic user commands)
     await app.bot.set_my_commands([
         BotCommand("start", "Начать работу с ботом"),
         BotCommand("help", "Показать справку"),
         BotCommand("build", "Выбрать сборку"),
         BotCommand("voice", "🎙️ Создать голосовое сообщение"),
         BotCommand("register_group", "📝 Зарегистрировать группу"),
+        BotCommand("projects", "📦 Список проектов"),
     ], scope=BotCommandScopeAllGroupChats())
 

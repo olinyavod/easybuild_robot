@@ -6,7 +6,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-# Настройка путей для импорта пакета src.easybuild_bot
+# Setup paths for importing src.easybuild_bot package
 THIS_FILE = Path(__file__).resolve()
 REPO_ROOT = THIS_FILE.parents[2]  # .../easybuild_bot
 PYTHON_ROOT = REPO_ROOT / 'python'

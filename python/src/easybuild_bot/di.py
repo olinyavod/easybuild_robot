@@ -5,6 +5,7 @@ Uses dependency_injector library for managing dependencies.
 """
 from dependency_injector import containers, providers
 from .storage import Storage
+from .access_control import AccessControlService
 from .commands import create_command_system
 
 
@@ -21,11 +22,17 @@ class Container(containers.DeclarativeContainer):
         db_name=config.database.db_name,
     )
     
+    # Access control service
+    access_control = providers.Singleton(
+        AccessControlService,
+        storage=storage,
+    )
+    
     # Command Pattern system
     command_system = providers.Singleton(
         create_command_system,
         storage=storage,
-        admin_token=config.bot.admin_token,
+        access_control=access_control,
         model_name=config.command_matcher.model_name,
         threshold=config.command_matcher.threshold,
     )

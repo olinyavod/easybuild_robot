@@ -8,6 +8,7 @@ A Telegram bot for managing builds with semantic command recognition in Russian 
 - 🎯 **Command Pattern Architecture** - Clean, scalable, maintainable code
 - 🔐 **Access Management** - User and group control
 - 📦 **Build Management** - Select and download APK builds
+- 🏗️ **Project Management** - Manage Flutter, .NET MAUI, and Xamarin projects
 - 🇷🇺 **Russian Language Support** - Uses ruBert-tiny model by Sberbank
 - 🔄 **Cross-Platform** - Python backend + Dart/Flutter frontend
 
@@ -128,6 +129,23 @@ The bot understands natural phrases in Russian:
 - "группы" (groups)
 - "показать группы" (show groups)
 
+### `/projects` command
+- "проекты" (projects)
+- "список проектов" (project list)
+- "показать проекты" (show projects)
+
+### `/add_project` command (admin only)
+- "добавить проект" (add project)
+- "создать проект" (create project)
+
+### `/edit_project` command (admin only)
+- "редактировать проект" (edit project)
+- "изменить проект" (modify project)
+
+### `/delete_project` command (admin only)
+- "удалить проект" (delete project)
+- "стереть проект" (erase project)
+
 ## 👥 Using in Groups
 
 In groups, the bot responds only when:
@@ -238,7 +256,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) before submitting a Pull Request.
+
+**Code Style:**
+- All comments and documentation must be in **English**
+- User-facing messages and semantic tags remain in **Russian**
+- Follow [PEP 8](https://www.python.org/dev/peps/pep-0008/) for Python code
 
 ## 📧 Support
 
