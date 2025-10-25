@@ -145,6 +145,14 @@ class EasyBuildBot:
         """Handle /register_group command."""
         await self._execute_command_by_name("/register_group", update, context)
     
+    async def cmd_block_user(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /block_user command."""
+        await self._execute_command_by_name("/block_user", update, context)
+    
+    async def cmd_unblock_user(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /unblock_user command."""
+        await self._execute_command_by_name("/unblock_user", update, context)
+    
     # Callback handlers (remain unchanged as they handle UI interactions)
     async def cb_allow_user(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle allow user callback."""
@@ -532,6 +540,8 @@ class EasyBuildBot:
         app.add_handler(CommandHandler("users", self.cmd_users))
         app.add_handler(CommandHandler("groups", self.cmd_groups))
         app.add_handler(CommandHandler("register_group", self.cmd_register_group))
+        app.add_handler(CommandHandler("block_user", self.cmd_block_user))
+        app.add_handler(CommandHandler("unblock_user", self.cmd_unblock_user))
 
         app.add_handler(CallbackQueryHandler(self.cb_allow_user, pattern=r"^allow_user_\d+$"))
         app.add_handler(CallbackQueryHandler(self.cb_unblock_user, pattern=r"^unblock_\d+$"))
@@ -558,16 +568,20 @@ class EasyBuildBot:
 
 async def post_init(app: Application):
     """Post initialization hook for setting bot commands."""
+    # Команды для приватных чатов (личный чат = админка, все команды видны)
     await app.bot.set_my_commands([
         BotCommand("start", "Начать работу с ботом"),
         BotCommand("help", "Показать справку"),
         BotCommand("build", "Выбрать сборку"),
         BotCommand("voice", "🎙️ Создать голосовое сообщение"),
         BotCommand("admin", "Получить права администратора"),
-        BotCommand("users", "👤 Управление пользователями (админ)"),
+        BotCommand("users", "👤 Список пользователей (админ)"),
+        BotCommand("block_user", "🔒 Заблокировать пользователя (админ)"),
+        BotCommand("unblock_user", "🔓 Разблокировать пользователя (админ)"),
         BotCommand("groups", "👥 Список групп (админ)"),
     ], scope=BotCommandScopeAllPrivateChats())
     
+    # Команды для групп (только базовые пользовательские)
     await app.bot.set_my_commands([
         BotCommand("start", "Начать работу с ботом"),
         BotCommand("help", "Показать справку"),
