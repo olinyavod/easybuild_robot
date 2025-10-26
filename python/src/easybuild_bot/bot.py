@@ -11,6 +11,22 @@ from .models import BotUser
 from .commands import CommandContext, CommandRegistry, CommandExecutor
 from .speech_recognition import SpeechRecognitionService
 from .text_to_speech import TextToSpeechService
+from .handlers import (
+    AddProjectWizard,
+    EditProjectWizard,
+    WAITING_NAME,
+    WAITING_TYPE,
+    WAITING_GIT_URL,
+    WAITING_PROJECT_FILE_PATH,
+    WAITING_LOCAL_PATH,
+    WAITING_DEV_BRANCH,
+    WAITING_RELEASE_BRANCH,
+    ADD_PROJECT_CONFIRM,
+    SELECT_PROJECT,
+    SELECT_FIELD,
+    EDIT_VALUE,
+    EDIT_PROJECT_CONFIRM,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +64,8 @@ class EasyBuildBot:
             tts_service: Text-to-speech service instance (optional)
         """
         self.storage = storage
+        self.add_project_wizard = AddProjectWizard(storage, access_control)
+        self.edit_project_wizard = EditProjectWizard(storage, access_control)
         self.access_control = access_control
         self.command_registry = command_registry
         self.command_executor = command_executor
@@ -491,9 +509,38 @@ class EasyBuildBot:
         app.add_handler(CommandHandler("block_user", self.cmd_block_user))
         app.add_handler(CommandHandler("unblock_user", self.cmd_unblock_user))
         app.add_handler(CommandHandler("projects", self.cmd_projects))
-        app.add_handler(CommandHandler("add_project", self.cmd_add_project))
-        app.add_handler(CommandHandler("edit_project", self.cmd_edit_project))
         app.add_handler(CommandHandler("delete_project", self.cmd_delete_project))
+
+        # Add project wizard conversation handler
+        add_project_conv = ConversationHandler(
+            entry_points=[CommandHandler("add_project", self.add_project_wizard.start)],
+            states={
+                WAITING_NAME: [MessageHandler(filters.TEXT & (~filters.COMMAND), self.add_project_wizard.receive_name)],
+                WAITING_TYPE: [CallbackQueryHandler(self.add_project_wizard.receive_type, pattern="^type_")],
+                WAITING_GIT_URL: [MessageHandler(filters.TEXT & (~filters.COMMAND), self.add_project_wizard.receive_git_url)],
+                WAITING_PROJECT_FILE_PATH: [MessageHandler(filters.TEXT & (~filters.COMMAND), self.add_project_wizard.receive_project_file_path)],
+                WAITING_LOCAL_PATH: [MessageHandler(filters.TEXT & (~filters.COMMAND), self.add_project_wizard.receive_local_path)],
+                WAITING_DEV_BRANCH: [MessageHandler(filters.TEXT & (~filters.COMMAND), self.add_project_wizard.receive_dev_branch)],
+                WAITING_RELEASE_BRANCH: [MessageHandler(filters.TEXT & (~filters.COMMAND), self.add_project_wizard.receive_release_branch)],
+                ADD_PROJECT_CONFIRM: [CallbackQueryHandler(self.add_project_wizard.confirm_creation, pattern="^confirm_")],
+            },
+            fallbacks=[CommandHandler("cancel", self.add_project_wizard.cancel)],
+            allow_reentry=False,
+        )
+        app.add_handler(add_project_conv)
+
+        # Edit project wizard conversation handler
+        edit_project_conv = ConversationHandler(
+            entry_points=[CommandHandler("edit_project", self.edit_project_wizard.start)],
+            states={
+                SELECT_PROJECT: [CallbackQueryHandler(self.edit_project_wizard.select_project, pattern="^edit_")],
+                SELECT_FIELD: [CallbackQueryHandler(self.edit_project_wizard.select_field, pattern="^edit_")],
+                EDIT_VALUE: [MessageHandler(filters.TEXT & (~filters.COMMAND), self.edit_project_wizard.receive_value)],
+            },
+            fallbacks=[CommandHandler("cancel", self.edit_project_wizard.cancel)],
+            allow_reentry=False,
+        )
+        app.add_handler(edit_project_conv)
 
         # Generic callback handler that routes to callback commands
         app.add_handler(CallbackQueryHandler(self.handle_callback_query))

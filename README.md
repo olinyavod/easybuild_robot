@@ -9,6 +9,8 @@ A Telegram bot for managing builds with semantic command recognition in Russian 
 - 🔐 **Access Management** - User and group control
 - 📦 **Build Management** - Select and download APK builds
 - 🏗️ **Project Management** - Manage Flutter, .NET MAUI, and Xamarin projects
+  - ✨ **New: Interactive Project Wizard** - Step-by-step project creation
+  - ✨ **New: Interactive Edit Menu** - Easy field-by-field project editing
 - 🇷🇺 **Russian Language Support** - Uses ruBert-tiny model by Sberbank
 - 🔄 **Cross-Platform** - Python backend + Dart/Flutter frontend
 

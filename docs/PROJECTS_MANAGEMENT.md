@@ -49,35 +49,48 @@ Shows list of available projects.
 
 ### `/add_project` - Add Project
 
-Creates a new project in the system.
+Creates a new project in the system using an **interactive step-by-step wizard**.
 
 **Access**: Administrators only
 
 **Format**:
 ```
-/add_project <name> <type> <git_url> <project_file_path> <local_path> [dev_branch] [release_branch]
+/add_project
 ```
 
-**Parameters**:
-- `name` - Project name (must be unique)
-- `type` - Project type: `flutter`, `dotnet_maui` (or `maui`), `xamarin`
-- `git_url` - Git repository URL
-- `project_file_path` - Project file path relative to repository root
-- `local_path` - Local repository path on server
-- `dev_branch` - (Optional) Development branch (default: `develop`)
-- `release_branch` - (Optional) Release branch (default: `main`)
+**Description**:
+The bot will guide you through a step-by-step process to create a new project. You will be asked for:
 
-**Examples**:
-```bash
-# Flutter project with default branches
-/add_project MyFlutterApp flutter https://github.com/user/myapp.git android/app /home/repos/myapp
+1. **Project name** - Unique project name
+2. **Project type** - Choose from Flutter, .NET MAUI, or Xamarin (interactive buttons)
+3. **Git URL** - Git repository URL
+4. **Project file path** - Path to project file relative to repository root
+5. **Local path** - Local repository path on server
+6. **Dev branch** - Development branch (default: `develop`, use `/skip` for default)
+7. **Release branch** - Release branch (default: `main`, use `/skip` for default)
+8. **Confirmation** - Review and confirm all details before creation
 
-# .NET MAUI project with custom branches
-/add_project MyMauiApp dotnet_maui https://github.com/user/mauiapp.git src/MyApp /home/repos/mauiapp dev master
+At any point, you can cancel the process by typing `/cancel`.
 
-# Xamarin project
-/add_project MyXamarinApp xamarin https://github.com/user/xamarinapp.git Droid /home/repos/xamarinapp feature/v2 release/v2
+**Interactive Example**:
 ```
+User: /add_project
+Bot:  📝 Шаг 1 из 7: Название проекта
+      Введите уникальное название для вашего проекта.
+
+User: MyFlutterApp
+Bot:  📦 Шаг 2 из 7: Тип проекта
+      [Buttons: 🦋 Flutter | 🔷 .NET MAUI | 🔶 Xamarin]
+
+User: [Clicks Flutter]
+Bot:  🔗 Шаг 3 из 7: Git URL
+      Введите URL Git-репозитория проекта.
+
+User: https://github.com/user/myapp.git
+...
+```
+
+For detailed documentation, see [ADD_PROJECT_WIZARD.md](ADD_PROJECT_WIZARD.md).
 
 **Semantic tags**:
 - "add project"
@@ -89,45 +102,74 @@ Creates a new project in the system.
 
 ### `/edit_project` - Edit Project
 
-Modifies settings of an existing project.
+Edits settings of an existing project using an **interactive field selection menu**.
 
 **Access**: Administrators only
 
 **Format**:
 ```
-/edit_project <name> <field> <value>
+/edit_project [project_name]
 ```
 
-**Available fields**:
+**Description**:
+The bot will show an interactive menu with all project fields and their current values. You can:
+1. Select project (if name not provided)
+2. Choose field to edit from the menu
+3. Enter new value
+4. Edit multiple fields
+5. Save all changes at once
+
+**Interactive Example**:
+```
+User: /edit_project MyApp
+
+Bot:  ✏️ Редактирование проекта
+      
+      🦋 Проект: MyApp
+      📦 Тип: flutter
+      
+      Текущие значения:
+      📝 Описание: Мое приложение
+      🔗 Git URL: https://github.com/user/myapp.git
+      ...
+      
+      [Buttons for each field]
+      [✅ Сохранить и выйти]
+      [❌ Отменить]
+
+User: [Clicks "📝 Описание"]
+
+Bot:  ✏️ Редактирование поля
+      Поле: 📝 Описание проекта
+      Текущее значение: Мое приложение
+      
+      💡 Введите новое значение...
+
+User: Обновленное приложение v2
+
+Bot:  ✅ Значение сохранено!
+      [Returns to field menu]
+
+User: [Clicks "✅ Сохранить и выйти"]
+
+Bot:  ✅ Проект MyApp обновлен!
+```
+
+**Available fields for editing:**
 - `description` - Project description
+- `git_url` - Git repository URL
+- `project_file_path` - Project file path
+- `local_repo_path` - Local repository path
 - `dev_branch` - Development branch
 - `release_branch` - Release branch
 - `tags` - Tags (comma-separated)
 - `groups` - Group IDs (comma-separated, empty = all groups)
-- `git_url` - Git repository URL
-- `project_file_path` - Project file path
-- `local_repo_path` - Local repository path
 
-**Examples**:
-```bash
-# Add description
-/edit_project MyApp description My Android application
+**Special commands:**
+- `/back` - Return to field menu (during value input)
+- `/cancel` - Cancel editing (changes not saved)
 
-# Set tags
-/edit_project MyApp tags mobile,android,production
-
-# Restrict access to specific groups
-/edit_project MyApp groups -1001234567890,-1009876543210
-
-# Allow access for all groups (empty value)
-/edit_project MyApp groups 
-
-# Change development branch
-/edit_project MyApp dev_branch feature/new-ui
-
-# Change Git URL
-/edit_project MyApp git_url https://github.com/newuser/myapp.git
-```
+For detailed documentation, see [EDIT_PROJECT_WIZARD.md](EDIT_PROJECT_WIZARD.md).
 
 **Semantic tags**:
 - "edit project"

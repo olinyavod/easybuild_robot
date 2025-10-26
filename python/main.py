@@ -1,121 +1,66 @@
 """
-Main entry point for EasyBuild Bot with Dependency Injection Container.
+Main entry point for EasyBuild Bot with full Dependency Injection.
 
-This version uses Command Pattern architecture with full DI support.
+Эта версия использует полностью автоматический DI - все зависимости
+разрешаются контейнером, ничего не создаётся вручную.
 """
-import os
 import logging
 from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import Application
 
 from src.easybuild_bot.di import Container
-from src.easybuild_bot.bot import EasyBuildBot, post_init
-from src.easybuild_bot.speech_recognition import SpeechRecognitionService
-from src.easybuild_bot.text_to_speech import TextToSpeechService
+from src.easybuild_bot.bot import post_init
 
 
 def main() -> None:
-    """Main function to initialize and run the bot with DI Container."""
+    """Главная функция для инициализации и запуска бота с полным DI."""
+    # Загружаем переменные окружения из .env файла
     load_dotenv()
     
-    # Setup logging
+    # Инициализируем DI Container
+    container = Container()
+    
+    # Получаем настройки для логирования
+    settings = container.settings()
+    
+    # Настройка логирования
     logging.basicConfig(
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        level=logging.INFO
+        format=settings.log_format,
+        level=getattr(logging, settings.log_level.upper())
     )
     logger = logging.getLogger(__name__)
     
-    # Get bot token from environment
-    token = os.getenv("BOT_TOKEN")
-    if not token:
-        raise RuntimeError("BOT_TOKEN environment variable is required")
+    # Логируем текущую конфигурацию (без секретов)
+    logger.info("=" * 60)
+    logger.info("🔧 Конфигурация приложения:")
+    for key, value in settings.to_dict().items():
+        logger.info(f"  • {key}: {value}")
+    logger.info("=" * 60)
     
-    admin_token = os.getenv("ADMIN_TOKEN", token)  # Use BOT_TOKEN as fallback
+    # Получаем полностью сконфигурированный бот из контейнера
+    # Все зависимости разрешаются автоматически!
+    logger.info("Resolving dependencies from DI container...")
+    bot = container.bot()
     
-    # Setup data directories
-    data_dir = os.path.join(os.getcwd(), "data")
-    os.makedirs(data_dir, exist_ok=True)
-    monty_dir = os.getenv("MONTYDB_DIR", os.path.join(data_dir, "monty"))
-    os.makedirs(monty_dir, exist_ok=True)
-    monty_db = os.getenv("MONTYDB_DB", "easybuild_bot")
-    
-    # Initialize DI Container
-    logger.info("Initializing Dependency Injection Container...")
-    container = Container()
-    
-    # Configure container
-    container.config.set("database.dir_path", monty_dir)
-    container.config.set("database.db_name", monty_db)
-    container.config.set("command_matcher.model_name", "cointegrated/rubert-tiny")
-    container.config.set("command_matcher.threshold", 0.5)
-    container.config.set("bot.admin_token", admin_token)
-    
-    # Get dependencies from container
-    logger.info("Resolving dependencies from container...")
-    storage = container.storage()
-    access_control = container.access_control()
+    # Логируем зарегистрированные команды
     command_registry = container.command_registry()
-    command_executor = container.command_executor()
-    
-    # Initialize optional services
-    whisper_model = os.getenv("WHISPER_MODEL", "base")
-    speech_service = None
-    try:
-        logger.info(f"Initializing speech recognition service with model: {whisper_model}")
-        speech_service = SpeechRecognitionService(
-            model_name=whisper_model,
-            language="ru"
-        )
-        logger.info("✅ Speech recognition service initialized")
-    except Exception as e:
-        logger.warning(f"⚠️ Failed to initialize speech recognition service: {e}")
-        logger.warning("Bot will run without speech recognition support")
-    
-    # Initialize text-to-speech service
-    tts_speaker = os.getenv("TTS_SPEAKER", "baya")  # Default female voice
-    tts_service = None
-    try:
-        logger.info(f"Initializing text-to-speech service with speaker: {tts_speaker}")
-        tts_service = TextToSpeechService(
-            language="ru",
-            speaker=tts_speaker,
-            sample_rate=48000
-        )
-        logger.info("✅ Text-to-speech service initialized")
-    except Exception as e:
-        logger.warning(f"⚠️ Failed to initialize text-to-speech service: {e}")
-        logger.warning("Bot will run without text-to-speech support")
-    
-    # Create bot instance with Command Pattern architecture
-    logger.info("Creating bot instance with Command Pattern architecture...")
-    bot = EasyBuildBot(
-        storage=storage,
-        access_control=access_control,
-        command_registry=command_registry,
-        command_executor=command_executor,
-        admin_token=admin_token,
-        speech_service=speech_service,
-        tts_service=tts_service
-    )
-    
-    # Log registered commands
     all_commands = command_registry.get_all_commands()
     logger.info(f"📋 Registered {len(all_commands)} commands:")
     for cmd in all_commands:
         logger.info(f"  • {cmd.get_command_name()}")
     
-    # Create Telegram application
+    # Создаём Telegram приложение
     logger.info("Building Telegram application...")
-    app = Application.builder().token(token).post_init(post_init).build()
+    app = Application.builder().token(settings.bot_token).post_init(post_init).build()
     
-    # Setup handlers
+    # Настраиваем обработчики
     logger.info("Setting up bot handlers...")
     bot.setup_handlers(app)
     
-    # Run bot
+    # Запускаем бота
     logger.info("=" * 60)
-    logger.info("🚀 Starting EasyBuild Bot with Command Pattern Architecture")
+    logger.info("🚀 Starting EasyBuild Bot with Full Dependency Injection")
     logger.info("=" * 60)
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 

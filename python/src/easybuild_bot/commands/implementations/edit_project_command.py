@@ -29,7 +29,7 @@ class EditProjectCommand(Command):
         # Parse command arguments
         # Format: /edit_project <name> <field> <value>
         
-        if not ctx.context.args or len(ctx.context.args) < 3:
+        if not ctx.context.args or len(ctx.context.args) < 2:
             usage_msg = (
                 "📝 **Использование команды /edit_project:**\n\n"
                 "```\n"
@@ -50,6 +50,7 @@ class EditProjectCommand(Command):
                 "/edit_project MyApp tags mobile,android,prod\n"
                 "/edit_project MyApp groups -1001234567890,-1009876543210\n"
                 "/edit_project MyApp dev_branch feature/new-ui\n"
+                "/edit_project MyApp groups  # очистить группы (доступ для всех)\n"
                 "```"
             )
             await ctx.update.effective_message.reply_text(usage_msg, parse_mode="Markdown")
@@ -57,7 +58,7 @@ class EditProjectCommand(Command):
         
         name = ctx.context.args[0]
         field = ctx.context.args[1].lower()
-        value = " ".join(ctx.context.args[2:])
+        value = " ".join(ctx.context.args[2:]) if len(ctx.context.args) > 2 else ""
         
         # Get project
         project = self.storage.get_project_by_name(name)
