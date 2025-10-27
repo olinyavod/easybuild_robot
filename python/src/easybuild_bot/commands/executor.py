@@ -64,9 +64,11 @@ class CommandExecutor:
                 f"Error executing command {command.get_command_name()}: {e}",
                 exc_info=True
             )
+            # Show detailed error for debugging (for admin)
+            error_details = f"Произошла ошибка при выполнении команды\n\n🔧 Детали ошибки (для отладки):\n{type(e).__name__}: {str(e)}"
             return CommandResult(
                 success=False,
-                error="Произошла ошибка при выполнении команды"
+                error=error_details
             )
     
     async def match_and_execute(self, text: str, ctx: CommandContext) -> Optional[CommandResult]:

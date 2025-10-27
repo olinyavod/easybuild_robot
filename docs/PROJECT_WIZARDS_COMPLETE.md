@@ -330,3 +330,5 @@ pkill -f "python.*main.py"
 **Дата:** 2025-10-26  
 **Автор:** AI Assistant
 
+
+

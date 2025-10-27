@@ -222,10 +222,10 @@ class EditProjectWizard:
         """Build field menu message content and keyboard."""
         # Build field buttons
         fields = [
+            ("✏️ Название проекта", "name", project.name),
             ("📝 Описание", "description", project.description),
             ("🔗 Git URL", "git_url", project.git_url),
             ("📁 Путь к файлу проекта", "project_file_path", project.project_file_path),
-            ("💾 Локальный путь", "local_repo_path", project.local_repo_path),
             ("🌿 Ветка разработки", "dev_branch", project.dev_branch),
             ("🚀 Ветка релиза", "release_branch", project.release_branch),
             ("🏷️ Теги", "tags", project.tags),
@@ -284,10 +284,10 @@ class EditProjectWizard:
         
         # Field descriptions and hints
         field_info = {
+            "name": ("✏️ Название проекта", "уникальное название проекта", "MyApp"),
             "description": ("📝 Описание проекта", "краткое описание проекта", "Мое приложение для Android"),
             "git_url": ("🔗 Git URL", "URL репозитория", "https://github.com/user/myapp.git"),
             "project_file_path": ("📁 Путь к файлу проекта", "относительный путь от корня репозитория", "android/app"),
-            "local_repo_path": ("💾 Локальный путь", "путь на сервере", "/home/repos/myapp"),
             "dev_branch": ("🌿 Ветка разработки", "название ветки", "develop"),
             "release_branch": ("🚀 Ветка релиза", "название ветки", "main"),
             "tags": ("🏷️ Теги", "теги через запятую", "mobile,android,prod"),
@@ -322,7 +322,27 @@ class EditProjectWizard:
         
         try:
             # Parse and validate value based on field type
-            if field_name == "tags":
+            if field_name == "name":
+                # Validate that name is not empty and unique
+                if not text or not text.strip():
+                    await update.effective_message.reply_text(
+                        "❌ Название проекта не может быть пустым\\!",
+                        parse_mode="MarkdownV2"
+                    )
+                    return EDIT_VALUE
+                
+                # Check if name already exists (excluding current project)
+                existing_project = self.storage.get_project_by_name(text)
+                if existing_project and existing_project.id != project.id:
+                    await update.effective_message.reply_text(
+                        f"❌ Проект с названием `{escape_md(text)}` уже существует\\!\n"
+                        f"Выберите другое название\\.",
+                        parse_mode="MarkdownV2"
+                    )
+                    return EDIT_VALUE
+                
+                new_value = text.strip()
+            elif field_name == "tags":
                 new_value = [tag.strip() for tag in text.split(",") if tag.strip()]
             elif field_name == "allowed_group_ids":
                 if text.strip():

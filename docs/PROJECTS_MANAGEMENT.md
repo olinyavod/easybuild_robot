@@ -129,13 +129,31 @@ Bot:  ✏️ Редактирование проекта
       📦 Тип: flutter
       
       Текущие значения:
+      ✏️ Название проекта: MyApp
       📝 Описание: Мое приложение
       🔗 Git URL: https://github.com/user/myapp.git
-      ...
+      📁 Путь к файлу проекта: android/app
+      🌿 Ветка разработки: develop
+      🚀 Ветка релиза: main
+      🏷️ Теги: mobile, android
+      👥 Группы: все группы
       
       [Buttons for each field]
       [✅ Сохранить и выйти]
       [❌ Отменить]
+
+User: [Clicks "✏️ Название проекта"]
+
+Bot:  ✏️ Редактирование поля
+      Поле: ✏️ Название проекта
+      Текущее значение: MyApp
+      
+      💡 Введите новое значение...
+
+User: MyAwesomeApp
+
+Bot:  ✅ Значение сохранено!
+      [Returns to field menu]
 
 User: [Clicks "📝 Описание"]
 
@@ -156,14 +174,16 @@ Bot:  ✅ Проект MyApp обновлен!
 ```
 
 **Available fields for editing:**
+- `name` - Project name (must be unique)
 - `description` - Project description
 - `git_url` - Git repository URL
 - `project_file_path` - Project file path
-- `local_repo_path` - Local repository path
 - `dev_branch` - Development branch
 - `release_branch` - Release branch
 - `tags` - Tags (comma-separated)
 - `groups` - Group IDs (comma-separated, empty = all groups)
+
+> ℹ️ **Note:** The `local_repo_path` field is system-managed and cannot be edited manually.
 
 **Special commands:**
 - `/back` - Return to field menu (during value input)
@@ -226,7 +246,20 @@ Deletes a project from the system.
 /edit_project ChecklistApp groups -1001234567890
 ```
 
-### Scenario 2: Managing Project Access
+### Scenario 2: Renaming a Project
+
+```bash
+# Using interactive wizard
+/edit_project OldAppName
+# Select "✏️ Название проекта"
+# Enter: NewAppName
+# Click "✅ Сохранить и выйти"
+
+# Or using command format
+/edit_project OldAppName name NewAppName
+```
+
+### Scenario 3: Managing Project Access
 
 ```bash
 # Show all projects (admin)

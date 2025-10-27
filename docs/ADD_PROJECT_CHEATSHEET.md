@@ -78,3 +78,5 @@ MyApp/MyApp.iOS/MyApp.iOS.csproj
 📖 [ADD_PROJECT_WIZARD.md](ADD_PROJECT_WIZARD.md) - Полное руководство  
 📖 [PROJECTS_MANAGEMENT.md](PROJECTS_MANAGEMENT.md) - Управление проектами
 
+
+

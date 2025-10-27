@@ -343,7 +343,9 @@ class EasyBuildBot:
                         
                 except Exception as e:
                     logger.error(f"Error processing voice command: {e}", exc_info=True)
-                    await message.reply_text("❌ Произошла ошибка при обработке команды.")
+                    # Show detailed error for debugging (for admin)
+                    error_details = f"❌ Произошла ошибка при обработке команды.\n\n🔧 Детали ошибки (для отладки):\n{type(e).__name__}: {str(e)}"
+                    await message.reply_text(error_details)
             else:
                 await status_msg.edit_text("❌ Не удалось распознать речь. Попробуйте ещё раз.")
                 
