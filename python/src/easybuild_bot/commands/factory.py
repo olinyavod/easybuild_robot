@@ -21,11 +21,14 @@ from .implementations import (
     EditProjectCommand,
     DeleteProjectCommand
 )
+from .implementations.version_command import VersionCommand
 # Import callback commands
 from .implementations.allow_user_callback import AllowUserCallbackCommand
 from .implementations.block_user_callback import BlockUserCallbackCommand
 from .implementations.unblock_user_callback import UnblockUserCallbackCommand
 from .implementations.build_apk_callback import BuildApkCallbackCommand
+from .implementations.project_select_callback import ProjectSelectCallbackCommand
+from .implementations.prepare_release_callback import PrepareReleaseCallbackCommand
 
 if TYPE_CHECKING:
     from ..storage import Storage
@@ -71,11 +74,14 @@ def create_command_system(
         AddProjectCommand(storage, access_control),
         EditProjectCommand(storage, access_control),
         DeleteProjectCommand(storage, access_control),
+        VersionCommand(storage, access_control),
         # Callback commands
         AllowUserCallbackCommand(storage, access_control),
         BlockUserCallbackCommand(storage, access_control),
         UnblockUserCallbackCommand(storage, access_control),
         BuildApkCallbackCommand(storage, access_control),
+        ProjectSelectCallbackCommand(storage, access_control),
+        PrepareReleaseCallbackCommand(storage, access_control),
     ]
     
     for cmd in commands:

@@ -11,6 +11,10 @@ virtualenv/
 data/
 *.data/
 
+# Cloned project repositories
+repos/
+repositories/
+
 # Python cache
 __pycache__/
 *.py[cod]

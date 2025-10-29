@@ -3,8 +3,10 @@ Step-by-step wizard for adding a new project.
 Implements ConversationHandler with multiple states.
 """
 
+import os
 import uuid
 import logging
+import re
 from typing import Optional
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, ConversationHandler
@@ -14,17 +16,21 @@ from ..access_control import AccessControlService
 
 logger = logging.getLogger(__name__)
 
+# Default directory for cloned repositories
+# Use project root directory (go up from src/easybuild_bot/handlers)
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+REPOS_DIR = os.path.join(PROJECT_ROOT, "repos")
+
 # Conversation states
 (
     WAITING_NAME,
     WAITING_TYPE,
     WAITING_GIT_URL,
     WAITING_PROJECT_FILE_PATH,
-    WAITING_LOCAL_PATH,
     WAITING_DEV_BRANCH,
     WAITING_RELEASE_BRANCH,
     CONFIRM
-) = range(8)
+) = range(7)
 
 
 def escape_md(text: str) -> str:
@@ -81,7 +87,7 @@ class AddProjectWizard:
         context.user_data['project_data'] = {}
         
         msg = (
-            "📝 *Шаг 1 из 7: Название проекта*\n\n"
+            "📝 *Шаг 1 из 6: Название проекта*\n\n"
             "Введите уникальное название для вашего проекта\\.\n"
             "Например: `MyApp`, `CoolProject`, `EasyBuildBot`\n\n"
             "💡 _Название должно быть уникальным и понятным\\._"
@@ -117,7 +123,7 @@ class AddProjectWizard:
         reply_markup = InlineKeyboardMarkup(keyboard)
         
         msg = (
-            "📦 *Шаг 2 из 7: Тип проекта*\n\n"
+            "📦 *Шаг 2 из 6: Тип проекта*\n\n"
             f"Отлично\\! Название: `{escape_md(name)}`\n\n"
             "Теперь выберите тип проекта:"
         )
@@ -147,7 +153,7 @@ class AddProjectWizard:
         
         # Ask for Git URL
         msg = (
-            "🔗 *Шаг 3 из 7: Git URL*\n\n"
+            "🔗 *Шаг 3 из 6: Git URL*\n\n"
             f"Тип проекта: {escape_md(type_display)}\n\n"
             "Введите URL Git\\-репозитория проекта\\.\n"
             "Например: `https://github.com/user/myapp.git`"
@@ -169,7 +175,7 @@ class AddProjectWizard:
         
         # Ask for project file path
         msg = (
-            "📁 *Шаг 4 из 7: Путь к файлу проекта*\n\n"
+            "📁 *Шаг 4 из 6: Путь к файлу проекта*\n\n"
             "Введите относительный путь к файлу проекта от корня репозитория\\.\n\n"
             "*Примеры:*\n"
             "• Flutter: `android/app` или `ios/Runner`\n"
@@ -180,7 +186,7 @@ class AddProjectWizard:
         return WAITING_PROJECT_FILE_PATH
     
     async def receive_project_file_path(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-        """Receive project file path and ask for local repository path."""
+        """Receive project file path and ask for dev branch."""
         project_file_path = update.effective_message.text.strip()
         
         # Validation
@@ -191,31 +197,16 @@ class AddProjectWizard:
         # Save path
         context.user_data['project_data']['project_file_path'] = project_file_path
         
-        # Ask for local repo path
-        msg = (
-            "💾 *Шаг 5 из 7: Локальный путь к репозиторию*\n\n"
-            "Введите путь к папке, где будет храниться локальная копия репозитория на сервере\\.\n\n"
-            "*Пример:*\n"
-            "`/home/repos/myapp`"
-        )
-        await update.effective_message.reply_text(msg, parse_mode="MarkdownV2")
-        return WAITING_LOCAL_PATH
-    
-    async def receive_local_path(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-        """Receive local path and ask for dev branch."""
-        local_path = update.effective_message.text.strip()
-        
-        # Validation
-        if not local_path:
-            await update.effective_message.reply_text("❌ Путь не может быть пустым. Попробуйте ещё раз:")
-            return WAITING_LOCAL_PATH
-        
-        # Save path
-        context.user_data['project_data']['local_repo_path'] = local_path
+        # Automatically generate local_repo_path from project name
+        project_name = context.user_data['project_data']['name']
+        # Clean project name for use as directory name (remove special chars)
+        clean_name = re.sub(r'[^\w\s-]', '', project_name).strip().replace(' ', '_').lower()
+        local_repo_path = os.path.join(REPOS_DIR, clean_name)
+        context.user_data['project_data']['local_repo_path'] = local_repo_path
         
         # Ask for dev branch
         msg = (
-            "🌿 *Шаг 6 из 7: Ветка разработки*\n\n"
+            "🌿 *Шаг 5 из 6: Ветка разработки*\n\n"
             "Введите название ветки разработки \\(development branch\\)\\.\n\n"
             "💡 Нажмите /skip, чтобы использовать значение по умолчанию: `develop`"
         )
@@ -235,7 +226,7 @@ class AddProjectWizard:
         
         # Ask for release branch
         msg = (
-            "🚀 *Шаг 7 из 7: Ветка релиза*\n\n"
+            "🚀 *Шаг 6 из 6: Ветка релиза*\n\n"
             "Введите название ветки релиза \\(release/production branch\\)\\.\n\n"
             "💡 Нажмите /skip, чтобы использовать значение по умолчанию: `main`"
         )

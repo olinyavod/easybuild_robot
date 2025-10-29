@@ -1,6 +1,7 @@
 """
 Database storage module using MontyDB.
 """
+import os
 from typing import List, Optional
 from .models import BotUser, BotGroup, Project, ProjectType
 from montydb import MontyClient
@@ -360,13 +361,19 @@ class Storage:
         Returns:
             Project object
         """
+        # Get local_repo_path and ensure it's absolute
+        local_repo_path = str(doc.get("local_repo_path", ""))
+        if local_repo_path and not os.path.isabs(local_repo_path):
+            # Convert relative path to absolute
+            local_repo_path = os.path.abspath(local_repo_path)
+        
         return Project(
             id=str(doc.get("id")),
             name=str(doc.get("name", "")),
             project_type=ProjectType(doc.get("project_type", "flutter")),
             git_url=str(doc.get("git_url", "")),
             project_file_path=str(doc.get("project_file_path", "")),
-            local_repo_path=str(doc.get("local_repo_path", "")),
+            local_repo_path=local_repo_path,
             dev_branch=str(doc.get("dev_branch", "develop")),
             release_branch=str(doc.get("release_branch", "main")),
             allowed_group_ids=list(doc.get("allowed_group_ids", [])),
