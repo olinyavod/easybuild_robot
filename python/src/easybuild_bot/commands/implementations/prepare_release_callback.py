@@ -63,7 +63,14 @@ class PrepareReleaseCallbackCommand(CallbackCommand):
         # Get current version from release branch
         current_version = await self._get_current_version_from_release_branch(project, version_service)
         if not current_version:
-            error_msg = f"❌ Не удалось определить текущую версию проекта {project.name}"
+            error_msg = (
+                f"❌ Не удалось определить текущую версию проекта {project.name}\n"
+                f"Ветка релиза: `{project.release_branch}`\n"
+                f"Файл проекта: `{project.project_file_path}`\n"
+                f"Убедитесь, что в файле проекта есть тег версии:\n"
+                f"  - Для MAUI: `<ApplicationDisplayVersion>X.Y.Z</ApplicationDisplayVersion>`\n"
+                f"  - Для Flutter: `version: X.Y.Z` в pubspec.yaml"
+            )
             await send_message(error_msg)
             return False, error_msg
         
@@ -226,10 +233,13 @@ class PrepareReleaseCallbackCommand(CallbackCommand):
                 timeout=10
             )
             if result.returncode != 0:
+                logger.error(f"Failed to get current branch for {project.name}: {result.stderr}")
                 return None
             current_branch = result.stdout.strip()
+            logger.info(f"Current branch for {project.name}: {current_branch}")
             
             # Switch to release branch
+            logger.info(f"Switching to release branch '{project.release_branch}' for {project.name}")
             result = subprocess.run(
                 ["git", "-C", repo_path, "checkout", project.release_branch],
                 capture_output=True,
@@ -237,23 +247,34 @@ class PrepareReleaseCallbackCommand(CallbackCommand):
                 timeout=30
             )
             if result.returncode != 0:
+                logger.error(f"Failed to checkout release branch '{project.release_branch}': {result.stderr}")
                 return None
             
             # Pull latest changes
-            subprocess.run(
+            logger.info(f"Pulling latest changes from '{project.release_branch}'")
+            result = subprocess.run(
                 ["git", "-C", repo_path, "pull", "origin", project.release_branch],
                 capture_output=True,
                 text=True,
                 timeout=120
             )
+            if result.returncode != 0:
+                logger.warning(f"Failed to pull from release branch (continuing anyway): {result.stderr}")
             
             # Get version from release branch using version service
+            logger.info(f"Getting version from release branch for {project.name}")
             version = await version_service.get_current_version(project)
+            
+            if version:
+                logger.info(f"Found version in release branch: {version}")
+            else:
+                logger.error(f"Failed to get version from release branch for {project.name}")
             
             # Switch back to original branch (usually dev branch will be set later)
             # We don't need to switch back as the prepare_release will switch to release anyway
             
             return version
-        except Exception:
+        except Exception as e:
+            logger.exception(f"Exception in _get_current_version_from_release_branch for {project.name}: {e}")
             return None
 

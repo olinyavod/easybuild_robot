@@ -42,7 +42,7 @@ class VersionService(ABC):
         Increment version number.
         
         Args:
-            version: Current version string (e.g., "1.0.0" or "1.0.0+5")
+            version: Current version string (e.g., "1.0.0", "1.0", or "1.0.0+5")
             increment_type: Type of increment - 'major', 'minor', or 'patch'
             
         Returns:
@@ -53,7 +53,12 @@ class VersionService(ABC):
         
         # Parse version parts
         parts = base_version.split('.')
-        if len(parts) != 3:
+        
+        # Handle different version formats
+        if len(parts) == 2:
+            # Version like "1.0" - treat as "1.0.0"
+            parts.append('0')
+        elif len(parts) != 3:
             # Invalid version format, just return with .1 added
             return f"{version}.1"
         

@@ -6,6 +6,13 @@ from typing import List, Optional
 from .models import BotUser, BotGroup, Project, ProjectType
 from montydb import MontyClient
 
+# Get project root directory (parent of src directory)
+_CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+_SRC_DIR = os.path.dirname(_CURRENT_DIR)  # src/easybuild_bot -> src
+_PYTHON_DIR = os.path.dirname(_SRC_DIR)    # src -> python
+PROJECT_ROOT = os.path.dirname(_PYTHON_DIR)  # python -> project root
+REPOS_DIR = os.path.join(PROJECT_ROOT, "repos")
+
 
 class Storage:
     """Database storage class for managing users and groups."""
@@ -21,6 +28,11 @@ class Storage:
         self._client = MontyClient(dir_path)
         self._db = self._client[db_name]
         self._init_indexes()
+    
+    @property
+    def db(self):
+        """Get database instance for direct access."""
+        return self._db
     
     def _init_indexes(self) -> None:
         """Create indexes for collections."""
@@ -364,8 +376,8 @@ class Storage:
         # Get local_repo_path and ensure it's absolute
         local_repo_path = str(doc.get("local_repo_path", ""))
         if local_repo_path and not os.path.isabs(local_repo_path):
-            # Convert relative path to absolute
-            local_repo_path = os.path.abspath(local_repo_path)
+            # Convert relative path to absolute, placing it in repos/ directory
+            local_repo_path = os.path.join(REPOS_DIR, local_repo_path)
         
         return Project(
             id=str(doc.get("id")),

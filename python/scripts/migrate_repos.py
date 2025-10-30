@@ -11,11 +11,17 @@ import re
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from src.easybuild_bot.storage import Storage
-from src.easybuild_bot.config import Settings
 
-# Project root directory
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+# Project root directory (python -> project root)
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PYTHON_DIR = os.path.dirname(SCRIPT_DIR)
+PROJECT_ROOT = os.path.dirname(PYTHON_DIR)
 REPOS_DIR = os.path.join(PROJECT_ROOT, "repos")
+
+# Database configuration
+DATA_DIR = os.path.join(PYTHON_DIR, "data")
+MONTYDB_DIR = DATA_DIR  # Changed: database is directly in data/, not in data/monty
+MONTYDB_NAME = "easybuild_bot"
 
 
 def clean_project_name(name: str) -> str:
@@ -29,12 +35,12 @@ def migrate_projects():
     print("🔄 Миграция проектов в папку repos/")
     print("=" * 60)
     
-    # Load settings
-    settings = Settings()
+    # Create necessary directories
+    os.makedirs(MONTYDB_DIR, exist_ok=True)
     
     # Initialize storage
-    print(f"\n📦 Подключение к БД: {settings.montydb_dir}/{settings.montydb_name}")
-    storage = Storage(dir_path=settings.montydb_dir, db_name=settings.montydb_name)
+    print(f"\n📦 Подключение к БД: {MONTYDB_DIR}/{MONTYDB_NAME}")
+    storage = Storage(dir_path=MONTYDB_DIR, db_name=MONTYDB_NAME)
     
     # Get all projects
     projects = storage.get_all_projects()
