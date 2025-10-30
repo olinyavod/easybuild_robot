@@ -4,9 +4,12 @@ Version service for Flutter projects.
 
 import os
 import re
+import logging
 from typing import Optional, Tuple
 from .base import VersionService
 from ..models import Project
+
+logger = logging.getLogger(__name__)
 
 
 class FlutterVersionService(VersionService):
@@ -29,7 +32,8 @@ class FlutterVersionService(VersionService):
             if match:
                 return match.group(1)
             return None
-        except Exception:
+        except Exception as e:
+            logger.error(f"Error getting version from {pubspec_path}: {str(e)}", exc_info=True)
             return None
     
     async def update_version(self, project: Project, new_version: str) -> Tuple[bool, str]:

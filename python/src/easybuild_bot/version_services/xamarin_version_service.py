@@ -4,10 +4,13 @@ Version service for Xamarin projects.
 
 import os
 import re
+import logging
 import xml.etree.ElementTree as ET
 from typing import Optional, Tuple
 from .base import VersionService
 from ..models import Project
+
+logger = logging.getLogger(__name__)
 
 
 class XamarinVersionService(VersionService):
@@ -37,7 +40,8 @@ class XamarinVersionService(VersionService):
                     return app_version_elem.text.strip()
             
             return None
-        except Exception:
+        except Exception as e:
+            logger.error(f"Error getting version from {csproj_path}: {str(e)}", exc_info=True)
             return None
     
     async def update_version(self, project: Project, new_version: str) -> Tuple[bool, str]:

@@ -4,11 +4,14 @@ Callback command for simplified release preparation.
 
 import os
 import subprocess
+import logging
 from typing import Optional
 from ..callback_base import CallbackCommand
 from ..base import CommandContext, CommandResult
 from ...models import Project
 from ...version_services import VersionServiceFactory
+
+logger = logging.getLogger(__name__)
 
 
 class PrepareReleaseCallbackCommand(CallbackCommand):

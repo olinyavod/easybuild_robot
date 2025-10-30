@@ -191,30 +191,44 @@ class ProjectSelectCallbackCommand(CallbackCommand):
                 )
                 return CommandResult(success=False, error=f"Fetch error: {str(e)}")
         
-        # Delete progress message
-        try:
-            await progress_msg.delete()
-        except Exception:
-            pass
-        
         # Automatically start release preparation
-        from .prepare_release_callback import PrepareReleaseCallbackCommand
-        prepare_cmd = PrepareReleaseCallbackCommand(self.storage, self.access_control)
-        
-        # We'll send only the final message
-        final_message_sent = False
-        
-        async def send_message(msg: str):
-            nonlocal final_message_sent
-            # Only send the final success/error message
-            if not final_message_sent:
-                await ctx.update.effective_message.reply_text(msg, parse_mode='Markdown')
-                final_message_sent = True
-        
-        success, message = await prepare_cmd.prepare_release_direct(project, send_message, show_start_message=False)
-        
-        return CommandResult(
-            success=success,
-            message=message
-        )
+        try:
+            from .prepare_release_callback import PrepareReleaseCallbackCommand
+            prepare_cmd = PrepareReleaseCallbackCommand(self.storage, self.access_control)
+            
+            # We'll send only the final message and delete progress message after
+            final_message_sent = False
+            
+            async def send_message(msg: str):
+                nonlocal final_message_sent
+                # Only send the final success/error message
+                if not final_message_sent:
+                    # Delete progress message before showing final result
+                    try:
+                        await progress_msg.delete()
+                    except Exception:
+                        pass
+                    
+                    await ctx.update.effective_message.reply_text(msg, parse_mode='Markdown')
+                    final_message_sent = True
+            
+            success, message = await prepare_cmd.prepare_release_direct(project, send_message, show_start_message=False)
+            
+            return CommandResult(
+                success=success,
+                message=message
+            )
+        except Exception as e:
+            # Delete progress message on error
+            try:
+                await progress_msg.delete()
+            except Exception:
+                pass
+            
+            error_msg = f"❌ Ошибка при подготовке релиза: {str(e)}"
+            await ctx.update.effective_message.reply_text(error_msg)
+            return CommandResult(
+                success=False,
+                error=error_msg
+            )
 
