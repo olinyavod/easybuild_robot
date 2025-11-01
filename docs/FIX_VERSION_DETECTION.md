@@ -118,3 +118,4 @@ error_msg = (
 1. `python/src/easybuild_bot/version_services/base.py` - улучшена поддержка формата версий
 2. `python/src/easybuild_bot/commands/implementations/prepare_release_callback.py` - добавлено логирование и улучшены сообщения об ошибках
 
+

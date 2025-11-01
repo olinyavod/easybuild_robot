@@ -85,14 +85,15 @@ class ProjectSelectCallbackCommand(CallbackCommand):
                 )
                 
                 if result.returncode != 0:
-                    error_msg = f"❌ Ошибка клонирования репозитория"
+                    error_details = result.stderr if result.stderr else "Неизвестная ошибка"
+                    error_msg = f"❌ Ошибка клонирования репозитория:\n```\n{error_details}\n```"
                     # Delete progress message
                     try:
                         await progress_msg.delete()
                     except Exception:
                         pass
-                    await ctx.update.effective_message.reply_text(error_msg)
-                    return CommandResult(success=False, error="Git clone failed")
+                    await ctx.update.effective_message.reply_text(error_msg, parse_mode='Markdown')
+                    return CommandResult(success=False, error=f"Git clone failed: {error_details}")
                 
                 # After cloning, checkout dev branch
                 result = subprocess.run(
@@ -137,14 +138,15 @@ class ProjectSelectCallbackCommand(CallbackCommand):
                 )
                 
                 if result.returncode != 0:
-                    error_msg = f"❌ Ошибка обновления репозитория"
+                    error_details = result.stderr if result.stderr else "Неизвестная ошибка"
+                    error_msg = f"❌ Ошибка обновления репозитория:\n```\n{error_details}\n```"
                     # Delete progress message
                     try:
                         await progress_msg.delete()
                     except Exception:
                         pass
-                    await ctx.update.effective_message.reply_text(error_msg)
-                    return CommandResult(success=False, error="Git fetch failed")
+                    await ctx.update.effective_message.reply_text(error_msg, parse_mode='Markdown')
+                    return CommandResult(success=False, error=f"Git fetch failed: {error_details}")
                 
                 # Checkout dev branch
                 result = subprocess.run(
@@ -196,21 +198,21 @@ class ProjectSelectCallbackCommand(CallbackCommand):
             from .prepare_release_callback import PrepareReleaseCallbackCommand
             prepare_cmd = PrepareReleaseCallbackCommand(self.storage, self.access_control)
             
-            # We'll send only the final message and delete progress message after
-            final_message_sent = False
+            # Track if progress message was deleted
+            progress_deleted = False
             
             async def send_message(msg: str):
-                nonlocal final_message_sent
-                # Only send the final success/error message
-                if not final_message_sent:
-                    # Delete progress message before showing final result
+                nonlocal progress_deleted
+                # Delete progress message on first message
+                if not progress_deleted:
                     try:
                         await progress_msg.delete()
                     except Exception:
                         pass
-                    
-                    await ctx.update.effective_message.reply_text(msg, parse_mode='Markdown')
-                    final_message_sent = True
+                    progress_deleted = True
+                
+                # Send all messages to user
+                await ctx.update.effective_message.reply_text(msg, parse_mode='Markdown')
             
             success, message = await prepare_cmd.prepare_release_direct(project, send_message, show_start_message=False)
             

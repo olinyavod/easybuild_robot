@@ -121,28 +121,32 @@ class PrepareReleaseCallbackCommand(CallbackCommand):
                     capture_output=True, text=True, timeout=300
                 )
                 if result.returncode != 0:
-                    error_msg = f"❌ Ошибка клонирования репозитория"
+                    error_details = result.stderr if result.stderr else "Неизвестная ошибка"
+                    error_msg = f"❌ Ошибка клонирования репозитория:\n```\n{error_details}\n```"
                     await send_message(error_msg)
                     return False, error_msg
             
             # Step 2: Switch to dev branch
             result = subprocess.run(["git", "-C", repo_path, "checkout", project.dev_branch], capture_output=True, text=True, timeout=30)
             if result.returncode != 0:
-                error_msg = f"❌ Не удалось переключиться на ветку {project.dev_branch}"
+                error_details = result.stderr if result.stderr else "Неизвестная ошибка"
+                error_msg = f"❌ Не удалось переключиться на ветку {project.dev_branch}:\n```\n{error_details}\n```"
                 await send_message(error_msg)
                 return False, error_msg
             
             # Step 3: Update changes in dev branch (WITHOUT submodules)
             result = subprocess.run(["git", "-C", repo_path, "pull", "origin", project.dev_branch], capture_output=True, text=True, timeout=120)
             if result.returncode != 0:
-                error_msg = f"❌ Не удалось обновить ветку разработки"
+                error_details = result.stderr if result.stderr else "Неизвестная ошибка"
+                error_msg = f"❌ Не удалось обновить ветку разработки:\n```\n{error_details}\n```"
                 await send_message(error_msg)
                 return False, error_msg
             
             # Step 4: Switch to release branch
             result = subprocess.run(["git", "-C", repo_path, "checkout", project.release_branch], capture_output=True, text=True, timeout=30)
             if result.returncode != 0:
-                error_msg = f"❌ Не удалось переключиться на ветку {project.release_branch}"
+                error_details = result.stderr if result.stderr else "Неизвестная ошибка"
+                error_msg = f"❌ Не удалось переключиться на ветку {project.release_branch}:\n```\n{error_details}\n```"
                 await send_message(error_msg)
                 return False, error_msg
             
@@ -153,7 +157,8 @@ class PrepareReleaseCallbackCommand(CallbackCommand):
             # Step 6: Merge dev branch into release branch
             result = subprocess.run(["git", "-C", repo_path, "merge", project.dev_branch, "-m", f"Merge {project.dev_branch} into {project.release_branch}"], capture_output=True, text=True, timeout=60)
             if result.returncode != 0:
-                error_msg = f"❌ Ошибка при мердже веток"
+                error_details = result.stderr if result.stderr else "Неизвестная ошибка"
+                error_msg = f"❌ Ошибка при мердже веток:\n```\n{error_details}\n```"
                 await send_message(error_msg)
                 return False, error_msg
             
@@ -167,21 +172,24 @@ class PrepareReleaseCallbackCommand(CallbackCommand):
             # Step 8: Create commit with "#Release <version>"
             result = subprocess.run(["git", "-C", repo_path, "add", "."], capture_output=True, text=True, timeout=30)
             if result.returncode != 0:
-                error_msg = f"❌ Ошибка при добавлении файлов"
+                error_details = result.stderr if result.stderr else "Неизвестная ошибка"
+                error_msg = f"❌ Ошибка при добавлении файлов:\n```\n{error_details}\n```"
                 await send_message(error_msg)
                 return False, error_msg
             
             commit_message = f"#Release {new_version}"
             result = subprocess.run(["git", "-C", repo_path, "commit", "-m", commit_message], capture_output=True, text=True, timeout=30)
             if result.returncode != 0:
-                error_msg = f"❌ Ошибка при создании коммита"
+                error_details = result.stderr if result.stderr else "Неизвестная ошибка"
+                error_msg = f"❌ Ошибка при создании коммита:\n```\n{error_details}\n```"
                 await send_message(error_msg)
                 return False, error_msg
             
             # Step 9: Push to repository
             result = subprocess.run(["git", "-C", repo_path, "push", "origin", project.release_branch], capture_output=True, text=True, timeout=120)
             if result.returncode != 0:
-                error_msg = f"❌ Ошибка при отправке изменений в репозиторий"
+                error_details = result.stderr if result.stderr else "Неизвестная ошибка"
+                error_msg = f"❌ Ошибка при отправке изменений в репозиторий:\n```\n{error_details}\n```"
                 await send_message(error_msg)
                 return False, error_msg
             
