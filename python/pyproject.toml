@@ -1,0 +1,138 @@
+[project]
+name = "easybuild_bot"
+version = "1.0.0"
+description = "Telegram bot for building mobile applications"
+requires-python = ">=3.9"
+
+[tool.ruff]
+# Целевая версия Python
+target-version = "py39"
+
+# Длина строки
+line-length = 100
+
+# Директории для проверки
+include = ["src/**/*.py", "main.py", "scripts/**/*.py", "tests/**/*.py"]
+
+# Исключения
+exclude = [
+    ".git",
+    "__pycache__",
+    ".venv",
+    "venv",
+    "build",
+    "dist",
+    "*.egg-info",
+    "data",
+    "docs",
+]
+
+[tool.ruff.lint]
+# Включенные правила линтера
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort (сортировка импортов)
+    "N",      # pep8-naming
+    "UP",     # pyupgrade
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "DTZ",    # flake8-datetimez
+    "T10",    # flake8-debugger
+    "EM",     # flake8-errmsg
+    "ISC",    # flake8-implicit-str-concat
+    "G",      # flake8-logging-format
+    "PIE",    # flake8-pie
+    "T20",    # flake8-print
+    "PT",     # flake8-pytest-style
+    "Q",      # flake8-quotes
+    "RSE",    # flake8-raise
+    "RET",    # flake8-return
+    "SIM",    # flake8-simplify
+    "TID",    # flake8-tidy-imports
+    "ARG",    # flake8-unused-arguments
+    "PTH",    # flake8-use-pathlib
+    "PL",     # pylint
+    "RUF",    # ruff-specific rules
+]
+
+# Игнорируемые правила
+ignore = [
+    "E501",    # Длина строки (уже контролируется line-length)
+    "PLR0913", # Слишком много аргументов функции
+    "PLR0912", # Слишком много ветвлений
+    "PLR2004", # Магические значения в сравнениях
+    "T201",    # print() разрешен (для логов и отладки)
+    "RET504",  # Не требовать удаления переменных перед return
+    "SIM108",  # Упрощение if-else (иногда читаемость важнее)
+]
+
+# Правила для конкретных файлов
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]  # Неиспользуемые импорты в __init__.py разрешены
+"tests/**/*.py" = ["ARG", "PLR2004"]  # В тестах разрешены неиспользуемые аргументы и магические значения
+"scripts/**/*.py" = ["T201"]  # В скриптах разрешен print()
+
+[tool.ruff.lint.isort]
+# Настройки сортировки импортов
+known-first-party = ["easybuild_bot"]
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+
+[tool.ruff.lint.mccabe]
+# Максимальная сложность функций (McCabe complexity)
+max-complexity = 10
+
+[tool.ruff.lint.pydocstyle]
+# Стиль документации
+convention = "google"
+
+[tool.ruff.format]
+# Настройки форматирования
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+# Настройки mypy для проверки типов
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false  # Можно включить позже для более строгой проверки
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_optional = true
+strict_equality = true
+show_error_codes = true
+show_column_numbers = true
+
+# Игнорировать отсутствующие импорты для некоторых библиотек
+[[tool.mypy.overrides]]
+module = [
+    "telegram.*",
+    "montydb.*",
+    "sentence_transformers.*",
+    "transformers.*",
+    "whisper.*",
+    "dependency_injector.*",
+]
+ignore_missing_imports = true
+
+# Настройки pytest
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --strict-markers"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+]
+

@@ -2,9 +2,9 @@
 /unblock_user command implementation.
 """
 
-from typing import List, Optional, Dict
+from typing import List, Dict
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-from ..base import Command, CommandContext, CommandResult
+from ..base import Command, CommandContext, CommandResult, CommandAccessLevel
 
 
 class UnblockUserCommand(Command):
@@ -38,9 +38,9 @@ class UnblockUserCommand(Command):
             ]
         }
     
-    async def can_execute(self, ctx: CommandContext) -> tuple[bool, Optional[str]]:
-        """Check if user has admin access."""
-        return await self._check_user_access(ctx.update, require_admin=True)
+    def get_access_level(self) -> CommandAccessLevel:
+        """Команда доступна только админу в личном чате."""
+        return CommandAccessLevel.ADMIN
     
     async def execute(self, ctx: CommandContext) -> CommandResult:
         """Execute unblock user command."""

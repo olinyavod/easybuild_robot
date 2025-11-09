@@ -11,6 +11,7 @@ A Telegram bot for managing builds with semantic command recognition in Russian 
 - 🏗️ **Project Management** - Manage Flutter, .NET MAUI, and Xamarin projects
   - ✨ **New: Interactive Project Wizard** - Step-by-step project creation
   - ✨ **New: Interactive Edit Menu** - Easy field-by-field project editing
+  - ✨ **New: Multi-Platform Xamarin Support** - Automatic version updates across Android, iOS, UWP projects
 - 🇷🇺 **Russian Language Support** - Uses ruBert-tiny model by Sberbank
 - 🔄 **Cross-Platform** - Python backend + Dart/Flutter frontend
 
@@ -30,6 +31,7 @@ The bot now uses the **Command Pattern** for better code organization and scalab
 - 📖 [Detailed Guide](docs/guides/COMMAND_PATTERN_GUIDE.md) - Complete tutorial
 - 📊 [Architecture Diagrams](docs/architecture/ARCHITECTURE.md) - Visual overview
 - 📊 [Comparison](docs/architecture/COMPARISON.md) - Before/After comparison
+- 🔧 [Xamarin Multi-Platform Support](docs/XAMARIN_MULTI_PLATFORM_SUPPORT.md) - Version management for Xamarin projects
 - 📚 [Full Documentation Index](docs/README.md) - All documentation
 
 ## 📁 Project Structure
@@ -235,6 +237,37 @@ cd python
 python tests/test_dynamic_commands.py
 ```
 
+## 🔍 Code Quality & Linting
+
+Проект использует современные инструменты для контроля качества кода:
+
+**Python:**
+- **Ruff** - быстрый линтер и форматтер
+- **MyPy** - проверка типов
+- **Pre-commit** - автоматические проверки перед коммитом
+
+**Dart:**
+- Встроенный анализатор Dart с расширенными правилами
+
+**Быстрый старт:**
+```bash
+# Установка инструментов
+cd python && pip install -r requirements-dev.txt
+pre-commit install
+
+# Проверка кода
+cd python && ./lint.sh
+
+# Автоматическое исправление
+cd python && ./fix.sh
+
+# Для Dart
+cd dart && dart analyze
+```
+
+📖 См. [LINTING.md](LINTING.md) для подробной документации по линтингу.
+
+
 ## 🔧 Deployment
 
 ### As a systemd service (Linux)
@@ -268,4 +301,3 @@ Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTIN
 ## 📧 Support
 
 For issues and questions, please open an issue in the repository.
-

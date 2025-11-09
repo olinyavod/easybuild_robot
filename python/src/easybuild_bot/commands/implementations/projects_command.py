@@ -2,8 +2,8 @@
 /projects command implementation.
 """
 
-from typing import List, Optional
-from ..base import Command, CommandContext, CommandResult
+from typing import List
+from ..base import Command, CommandContext, CommandResult, CommandAccessLevel
 
 
 class ProjectsCommand(Command):
@@ -21,9 +21,9 @@ class ProjectsCommand(Command):
             "доступные проекты"
         ]
     
-    async def can_execute(self, ctx: CommandContext) -> tuple[bool, Optional[str]]:
-        """Check if user has access."""
-        return await self._check_user_access(ctx.update, require_admin=False)
+    def get_access_level(self) -> CommandAccessLevel:
+        """Команда доступна любому авторизованному пользователю."""
+        return CommandAccessLevel.USER
     
     async def execute(self, ctx: CommandContext) -> CommandResult:
         """Execute projects command."""

@@ -2,9 +2,9 @@
 Implementations of specific bot commands.
 """
 
-from .start_command import StartCommand
 from .help_command import HelpCommand
 from .build_command import BuildCommand
+from .release_command import ReleaseCommand
 from .users_command import UsersCommand
 from .groups_command import GroupsCommand
 from .register_group_command import RegisterGroupCommand
@@ -16,9 +16,9 @@ from .edit_project_command import EditProjectCommand
 from .delete_project_command import DeleteProjectCommand
 
 __all__ = [
-    'StartCommand',
     'HelpCommand',
     'BuildCommand',
+    'ReleaseCommand',
     'UsersCommand',
     'GroupsCommand',
     'RegisterGroupCommand',
@@ -29,4 +29,3 @@ __all__ = [
     'EditProjectCommand',
     'DeleteProjectCommand'
 ]
-

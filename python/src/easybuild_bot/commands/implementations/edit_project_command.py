@@ -2,24 +2,24 @@
 /edit_project command implementation.
 """
 
-from typing import List, Optional, Dict
-from ..base import Command, CommandContext, CommandResult
+from typing import List, Dict
+from ..base import Command, CommandContext, CommandResult, CommandAccessLevel
 
 
 class EditProjectCommand(Command):
     """Edit project command - edit project settings (admin only)."""
-    
+
     def get_command_name(self) -> str:
         return "/edit_project"
-    
+
     def get_semantic_tags(self) -> List[str]:
         return [
-            "редактировать проект",
-            "изменить проект",
-            "настроить проект",
-            "обновить проект"
+            "редактировать настройки проекта",
+            "изменить настройки проекта",
+            "настроить конфигурацию проекта",
+            "обновить параметры проекта"
         ]
-    
+
     def get_parameter_patterns(self) -> Dict[str, List[str]]:
         """Get regex patterns for parameter extraction from voice commands."""
         return {
@@ -28,17 +28,17 @@ class EditProjectCommand(Command):
                 r"проект\s+([А-Яа-яЁёA-Za-z0-9_\-]+)",
             ]
         }
-    
-    async def can_execute(self, ctx: CommandContext) -> tuple[bool, Optional[str]]:
-        """Check if user has admin access."""
-        return await self._check_user_access(ctx.update, require_admin=True)
-    
+
+    def get_access_level(self) -> CommandAccessLevel:
+        """Команда доступна только админу в личном чате."""
+        return CommandAccessLevel.ADMIN
+
     async def execute(self, ctx: CommandContext) -> CommandResult:
         """Execute edit project command."""
         # Parse command arguments
         # For voice commands, check params first
         # For text commands, use context.args
-        
+
         # Try to get arguments from context.args (for /edit_project command)
         if ctx.context.args and len(ctx.context.args) >= 2:
             name = ctx.context.args[0]
@@ -80,14 +80,14 @@ class EditProjectCommand(Command):
             )
             await ctx.update.effective_message.reply_text(usage_msg)
             return CommandResult(success=False, error="Недостаточно параметров")
-        
+
         # Get project
         project = self.storage.get_project_by_name(name)
         if not project:
             error_msg = f"❌ Проект {name} не найден!"
             await ctx.update.effective_message.reply_text(error_msg)
             return CommandResult(success=False, error=f"Проект {name} не найден")
-        
+
         # Update field
         try:
             if field == "name":
@@ -96,14 +96,14 @@ class EditProjectCommand(Command):
                     error_msg = "❌ Название проекта не может быть пустым!"
                     await ctx.update.effective_message.reply_text(error_msg)
                     return CommandResult(success=False, error="Пустое название проекта")
-                
+
                 # Check if name already exists (excluding current project)
                 existing_project = self.storage.get_project_by_name(value)
                 if existing_project and existing_project.id != project.id:
                     error_msg = f"❌ Проект с названием '{value}' уже существует! Выберите другое название."
                     await ctx.update.effective_message.reply_text(error_msg)
                     return CommandResult(success=False, error=f"Проект {value} уже существует")
-                
+
                 project.name = value.strip()
             elif field == "description":
                 project.description = value if value else None
@@ -148,17 +148,17 @@ class EditProjectCommand(Command):
                 )
                 await ctx.update.effective_message.reply_text(error_msg)
                 return CommandResult(success=False, error=f"Неизвестное поле: {field}")
-            
+
             # Save changes
             self.storage.add_project(project)
-            
+
             # Build success message
             success_msg = (
                 f"✅ Проект '{name}' обновлен!\n\n"
                 f"Поле: {field}\n"
                 f"Новое значение:\n"
             )
-            
+
             if field == "tags":
                 success_msg += f"{', '.join(project.tags) if project.tags else 'нет тегов'}"
             elif field == "groups":
@@ -168,13 +168,12 @@ class EditProjectCommand(Command):
                     success_msg += "все группы"
             else:
                 success_msg += f"{value if value else 'пусто'}"
-            
+
             await ctx.update.effective_message.reply_text(success_msg)
-            
+
             return CommandResult(success=True, message=f"Проект {name} обновлен")
-            
+
         except Exception as e:
             error_msg = f"❌ Ошибка при обновлении проекта: {str(e)}"
             await ctx.update.effective_message.reply_text(error_msg)
             return CommandResult(success=False, error=str(e))
-

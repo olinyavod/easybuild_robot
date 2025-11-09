@@ -3,7 +3,7 @@
 """
 
 from typing import List, Optional
-from ..base import Command, CommandContext, CommandResult
+from ..base import Command, CommandContext, CommandResult, CommandAccessLevel
 
 
 class RegisterGroupCommand(Command):
@@ -21,14 +21,22 @@ class RegisterGroupCommand(Command):
             "добавить чат"
         ]
     
+    def get_access_level(self) -> CommandAccessLevel:
+        """Команда доступна авторизованным пользователям."""
+        return CommandAccessLevel.USER
+    
     async def can_execute(self, ctx: CommandContext) -> tuple[bool, Optional[str]]:
-        """Check if user has access and command is in a group."""
-        has_access, error_msg = await self._check_user_access(ctx.update, require_admin=False)
+        """
+        Переопределяем стандартную проверку доступа.
+        Нужна дополнительная проверка, что команда выполняется в группе.
+        """
+        # Сначала базовая проверка доступа
+        has_access, error_msg = await super().can_execute(ctx)
         
         if not has_access:
             return False, error_msg
         
-        # Check if in a group
+        # Проверка, что команда в группе
         chat = ctx.update.effective_chat
         if not chat or chat.id > 0:
             return False, "Эта команда работает только в группах."

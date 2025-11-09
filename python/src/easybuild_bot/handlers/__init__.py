@@ -3,11 +3,13 @@ Handlers package for bot conversation flows.
 """
 
 from .add_project_wizard import AddProjectWizard, WAITING_NAME, WAITING_TYPE, WAITING_GIT_URL, WAITING_PROJECT_FILE_PATH, WAITING_DEV_BRANCH, WAITING_RELEASE_BRANCH, CONFIRM
-from .edit_project_wizard import EditProjectWizard, SELECT_PROJECT, SELECT_FIELD, EDIT_VALUE
+from .edit_project_wizard import EditProjectWizard, SELECT_PROJECT, SELECT_FIELD, EDIT_VALUE, SELECT_GROUP
+from .release_wizard import ReleaseWizard, WAITING_VERSION
 
 # For convenience, rename CONFIRM from add wizard to avoid conflicts
 ADD_PROJECT_CONFIRM = CONFIRM
 EDIT_PROJECT_CONFIRM = CONFIRM
+RELEASE_WAITING_VERSION = WAITING_VERSION
 
 __all__ = [
     'AddProjectWizard',
@@ -22,6 +24,9 @@ __all__ = [
     'SELECT_PROJECT',
     'SELECT_FIELD',
     'EDIT_VALUE',
+    'SELECT_GROUP',
     'EDIT_PROJECT_CONFIRM',
+    'ReleaseWizard',
+    'RELEASE_WAITING_VERSION',
 ]
 

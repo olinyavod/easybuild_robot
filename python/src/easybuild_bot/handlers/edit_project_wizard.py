@@ -18,8 +18,9 @@ logger = logging.getLogger(__name__)
     SELECT_PROJECT,
     SELECT_FIELD,
     EDIT_VALUE,
+    SELECT_GROUP,
     CONFIRM
-) = range(4)
+) = range(5)
 
 
 def escape_md(text: str) -> str:
@@ -30,7 +31,7 @@ def escape_md(text: str) -> str:
     return text
 
 
-def format_value(field: str, value) -> str:
+def format_value(field: str, value, storage=None) -> str:
     """Format field value for display."""
     if value is None or value == "":
         return "_не задано_"
@@ -45,7 +46,14 @@ def format_value(field: str, value) -> str:
     elif field == "tags":
         return ", ".join(value) if value else "_нет тегов_"
     elif field == "allowed_group_ids":
-        return ", ".join(str(g) for g in value) if value else "_все группы_"
+        if not value:
+            return "_все группы_"
+        # Display group name if available
+        if storage and len(value) > 0:
+            group = next((g for g in storage.get_all_groups() if g.group_id == value[0]), None)
+            if group:
+                return group.group_name or f"Группа {value[0]}"
+        return str(value[0])
     else:
         return str(value)
 
@@ -248,7 +256,7 @@ class EditProjectWizard:
         
         keyboard = []
         for label, field_name, value in fields:
-            formatted_value = format_value(field_name, value)
+            formatted_value = format_value(field_name, value, self.storage)
             msg += f"{label}: {escape_md(str(formatted_value)) if not formatted_value.startswith('_') else formatted_value}\n"
             keyboard.append([InlineKeyboardButton(label, callback_data=f"edit_field_{field_name}")])
         
@@ -276,11 +284,15 @@ class EditProjectWizard:
         field_name = query.data.replace("edit_field_", "")
         context.user_data['editing_field'] = field_name
         
+        # Special handling for allowed_group_ids - show list of registered groups
+        if field_name == "allowed_group_ids":
+            return await self.show_group_selection(update, context)
+        
         project = context.user_data['edit_project']
         
         # Get current value
         current_value = getattr(project, field_name)
-        formatted_value = format_value(field_name, current_value)
+        formatted_value = format_value(field_name, current_value, self.storage)
         
         # Field descriptions and hints
         field_info = {
@@ -291,7 +303,6 @@ class EditProjectWizard:
             "dev_branch": ("🌿 Ветка разработки", "название ветки", "develop"),
             "release_branch": ("🚀 Ветка релиза", "название ветки", "main"),
             "tags": ("🏷️ Теги", "теги через запятую", "mobile,android,prod"),
-            "allowed_group_ids": ("👥 Группы", "ID групп через запятую (пусто = все группы)", "-1001234567890,-1002345678901"),
         }
         
         label, hint, example = field_info.get(field_name, (field_name, "", ""))
@@ -309,6 +320,101 @@ class EditProjectWizard:
         await query.message.edit_text(msg, parse_mode="MarkdownV2")
         
         return EDIT_VALUE
+    
+    async def show_group_selection(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Show registered groups as buttons for selection."""
+        query = update.callback_query
+        project = context.user_data['edit_project']
+        
+        # Get all registered groups
+        groups = self.storage.get_all_groups()
+        
+        if not groups:
+            await query.message.edit_text(
+                "❌ Нет зарегистрированных групп\\!\n\n"
+                "Сначала зарегистрируйте группы через команду `/register_group`\\.",
+                parse_mode="MarkdownV2"
+            )
+            return await self.show_field_menu(update, context)
+        
+        # Get current group ID (if any)
+        current_group_id = project.allowed_group_ids[0] if project.allowed_group_ids else None
+        
+        # Build keyboard with groups
+        keyboard = []
+        for group in groups:
+            # Mark currently selected group
+            prefix = "✅ " if current_group_id == group.group_id else ""
+            button_text = f"{prefix}{group.group_name or f'Группа {group.group_id}'}"
+            keyboard.append([InlineKeyboardButton(button_text, callback_data=f"select_group_{group.group_id}")])
+        
+        # Add "no group" option (empty allowed_group_ids = available for all groups)
+        prefix = "✅ " if not project.allowed_group_ids else ""
+        keyboard.append([InlineKeyboardButton(f"{prefix}🌍 Все группы", callback_data="select_group_all")])
+        
+        keyboard.append([InlineKeyboardButton("◀️ Назад", callback_data="group_back")])
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        # Format current value
+        current_value_text = "_все группы_"
+        if project.allowed_group_ids:
+            # Find group name by ID
+            group = next((g for g in groups if g.group_id == project.allowed_group_ids[0]), None)
+            if group:
+                current_value_text = escape_md(group.group_name or f"Группа {group.group_id}")
+            else:
+                current_value_text = escape_md(f"ID: {project.allowed_group_ids[0]}")
+        
+        msg = (
+            f"👥 *Выбор группы для проекта*\n\n"
+            f"📦 *Проект:* `{escape_md(project.name)}`\n"
+            f"*Текущая группа:* {current_value_text}\n\n"
+            f"💡 Выберите группу, для которой будет доступен проект:\n"
+            f"_\\(только одна группа на проект по бизнес\\-требованиям\\)_"
+        )
+        
+        await query.message.edit_text(msg, parse_mode="MarkdownV2", reply_markup=reply_markup)
+        
+        return SELECT_GROUP
+    
+    async def handle_group_selection(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Handle group selection from buttons."""
+        query = update.callback_query
+        await query.answer()
+        
+        if query.data == "group_back":
+            return await self.show_field_menu(update, context)
+        
+        project = context.user_data['edit_project']
+        
+        if query.data == "select_group_all":
+            # Set to empty list (available for all groups)
+            new_value = []
+        else:
+            # Extract group ID and set as single-element list
+            group_id = int(query.data.replace("select_group_", ""))
+            new_value = [group_id]
+        
+        # Save to edit_data (not to project yet)
+        context.user_data['edit_data']['allowed_group_ids'] = new_value
+        
+        # Get group name for confirmation message
+        if new_value:
+            groups = self.storage.get_all_groups()
+            group = next((g for g in groups if g.group_id == new_value[0]), None)
+            group_name = group.group_name if group else f"ID: {new_value[0]}"
+            value_text = escape_md(group_name)
+        else:
+            value_text = "все группы"
+        
+        await query.message.edit_text(
+            f"✅ Группа изменена на: {value_text}\\!\n\n"
+            f"Изменения будут применены после нажатия \"Сохранить и выйти\"\\.",
+            parse_mode="MarkdownV2"
+        )
+        
+        # Return to field menu
+        return await self.show_field_menu(update, context)
     
     async def receive_value(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         """Receive new value for the field."""
@@ -344,19 +450,6 @@ class EditProjectWizard:
                 new_value = text.strip()
             elif field_name == "tags":
                 new_value = [tag.strip() for tag in text.split(",") if tag.strip()]
-            elif field_name == "allowed_group_ids":
-                if text.strip():
-                    try:
-                        new_value = [int(gid.strip()) for gid in text.split(",") if gid.strip()]
-                    except ValueError:
-                        await update.effective_message.reply_text(
-                            "❌ Неверный формат\\! Используйте числа через запятую\\.\n"
-                            "Пример: `-1001234567890,-1002345678901`",
-                            parse_mode="MarkdownV2"
-                        )
-                        return EDIT_VALUE
-                else:
-                    new_value = []  # Empty means all groups
             elif field_name == "description":
                 new_value = text if text else None
             else:
@@ -413,7 +506,7 @@ class EditProjectWizard:
             
             for field_name in changes.keys():
                 value = getattr(project, field_name)
-                formatted = format_value(field_name, value)
+                formatted = format_value(field_name, value, self.storage)
                 msg += f"• {escape_md(field_name)}: {escape_md(str(formatted)) if not formatted.startswith('_') else formatted}\n"
             
             await query.message.edit_text(msg, parse_mode="MarkdownV2")

@@ -119,3 +119,5 @@ error_msg = (
 2. `python/src/easybuild_bot/commands/implementations/prepare_release_callback.py` - добавлено логирование и улучшены сообщения об ошибках
 
 
+
+

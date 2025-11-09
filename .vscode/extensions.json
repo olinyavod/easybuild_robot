@@ -1,0 +1,28 @@
+{
+  "recommendations": [
+    // Python
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "charliermarsh.ruff",
+
+    // Dart/Flutter
+    "dart-code.dart-code",
+    "dart-code.flutter",
+
+    // Git
+    "eamodio.gitlens",
+
+    // YAML
+    "redhat.vscode-yaml",
+
+    // Markdown
+    "yzhang.markdown-all-in-one",
+
+    // Общие инструменты
+    "editorconfig.editorconfig",
+    "usernamehw.errorlens",
+    "streetsidesoftware.code-spell-checker",
+    "streetsidesoftware.code-spell-checker-russian"
+  ]
+}
+

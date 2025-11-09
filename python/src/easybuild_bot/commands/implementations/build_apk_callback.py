@@ -2,10 +2,9 @@
 Callback command for build APK actions.
 """
 
-from typing import Optional
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from ..callback_base import CallbackCommand
-from ..base import CommandContext, CommandResult
+from ..base import CommandContext, CommandResult, CommandAccessLevel
 
 
 class BuildApkCallbackCommand(CallbackCommand):
@@ -17,9 +16,9 @@ class BuildApkCallbackCommand(CallbackCommand):
     def get_callback_pattern(self) -> str:
         return r"^build_apk_.*$"
     
-    async def can_execute(self, ctx: CommandContext) -> tuple[bool, Optional[str]]:
-        """Check if user has access."""
-        return await self._check_user_access(ctx.update, require_admin=False)
+    def get_access_level(self) -> CommandAccessLevel:
+        """Callback доступен авторизованным пользователям."""
+        return CommandAccessLevel.USER
     
     async def execute(self, ctx: CommandContext) -> CommandResult:
         """Execute build APK callback."""
@@ -63,16 +62,15 @@ class BuildApkCallbackCommand(CallbackCommand):
         # Answer callback to remove loading state
         await query.answer()
         
-        # Send build information
-        await ctx.update.effective_message.reply_text(f"Сборка {build_info['name']}")
-        
+        # Send build information with download button
         keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("Скачать", url=build_info['url'])]
+            [InlineKeyboardButton("📥 Скачать", url=build_info['url'])]
         ])
         
         await ctx.update.effective_message.reply_text(
-            f"Скачайте сборку {build_info['name']} по ссылке:",
-            reply_markup=keyboard
+            f"📦 **{build_info['name']}**\n\nНажмите кнопку ниже, чтобы скачать сборку:",
+            reply_markup=keyboard,
+            parse_mode='Markdown'
         )
         
         return CommandResult(

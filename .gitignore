@@ -59,6 +59,13 @@ coverage.xml
 *.log
 .pytest_cache/
 
+# Linters & code quality tools cache
+.mypy_cache/
+.ruff_cache/
+.pylint.d/
+.dmypy.json
+dmypy.json
+
 # Jupyter Notebook
 .ipynb_checkpoints
 
@@ -75,7 +82,7 @@ env.bak/
 venv.bak/
 
 # IDEs
-.vscode/
+# .vscode/ - сохраняем настройки линтеров в репозитории
 .idea/
 *.swp
 *.swo
@@ -177,11 +184,6 @@ lib/generated_plugin_registrant.dart
 *.ipr
 *.iws
 .idea/
-
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented to leave .vscode folder in your repository by default
-# .vscode/
 
 # Database files
 # SQLite

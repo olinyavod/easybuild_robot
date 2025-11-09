@@ -2,9 +2,8 @@
 Callback command for blocking user.
 """
 
-from typing import Optional
 from ..callback_base import CallbackCommand
-from ..base import CommandContext, CommandResult
+from ..base import CommandContext, CommandResult, CommandAccessLevel
 
 
 class BlockUserCallbackCommand(CallbackCommand):
@@ -16,9 +15,9 @@ class BlockUserCallbackCommand(CallbackCommand):
     def get_callback_pattern(self) -> str:
         return r"^block_\d+$"
     
-    async def can_execute(self, ctx: CommandContext) -> tuple[bool, Optional[str]]:
-        """Check if user has admin access."""
-        return await self._check_user_access(ctx.update, require_admin=True)
+    def get_access_level(self) -> CommandAccessLevel:
+        """Callback доступен только админу."""
+        return CommandAccessLevel.ADMIN
     
     async def execute(self, ctx: CommandContext) -> CommandResult:
         """Execute block user callback."""

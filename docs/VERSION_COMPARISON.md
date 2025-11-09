@@ -133,3 +133,5 @@ grep -A1 "ApplicationDisplayVersion" TechnouprApp.Client/TechnouprApp.Client.csp
 Оба формата теперь поддерживаются ботом!
 
 
+
+

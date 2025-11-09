@@ -7,7 +7,7 @@ import subprocess
 from typing import Optional
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from ..callback_base import CallbackCommand
-from ..base import CommandContext, CommandResult
+from ..base import CommandContext, CommandResult, CommandAccessLevel
 
 
 class ProjectSelectCallbackCommand(CallbackCommand):
@@ -19,9 +19,38 @@ class ProjectSelectCallbackCommand(CallbackCommand):
     def get_callback_pattern(self) -> str:
         return r"^build_project:.*$"
     
+    def get_access_level(self) -> CommandAccessLevel:
+        """Callback доступен авторизованным пользователям."""
+        return CommandAccessLevel.USER
+    
     async def can_execute(self, ctx: CommandContext) -> tuple[bool, Optional[str]]:
-        """Check if user has access."""
-        return await self._check_user_access(ctx.update, require_admin=False)
+        """
+        Переопределяем стандартную проверку доступа.
+        Нужна дополнительная проверка, что проект разрешен для группы.
+        """
+        # Сначала базовая проверка доступа
+        has_access, error_msg = await super().can_execute(ctx)
+        
+        if not has_access:
+            return False, error_msg
+        
+        # Проверка разрешений на проект для группы
+        query = ctx.update.callback_query
+        if query and query.data:
+            # Extract project ID from callback data
+            parts = query.data.split(":", 1)
+            if len(parts) == 2:
+                project_id = parts[1]
+                project = self.storage.get_project_by_id(project_id)
+                
+                # Check if called from group
+                chat = ctx.update.effective_chat
+                if chat and chat.type in ("group", "supergroup"):
+                    # Verify project is allowed for this group
+                    if project and chat.id not in project.allowed_group_ids:
+                        return False, "Этот проект недоступен для данной группы"
+        
+        return True, None
     
     async def execute(self, ctx: CommandContext) -> CommandResult:
         """Execute project selection callback."""

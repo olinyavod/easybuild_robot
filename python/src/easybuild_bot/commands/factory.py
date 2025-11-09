@@ -8,9 +8,9 @@ from typing import TYPE_CHECKING
 from .registry import CommandRegistry
 from .executor import CommandExecutor
 from .implementations import (
-    StartCommand,
     HelpCommand,
     BuildCommand,
+    ReleaseCommand,
     UsersCommand,
     GroupsCommand,
     RegisterGroupCommand,
@@ -29,6 +29,8 @@ from .implementations.unblock_user_callback import UnblockUserCallbackCommand
 from .implementations.build_apk_callback import BuildApkCallbackCommand
 from .implementations.project_select_callback import ProjectSelectCallbackCommand
 from .implementations.prepare_release_callback import PrepareReleaseCallbackCommand
+from .implementations.release_project_callback import ReleaseProjectCallbackCommand
+from .implementations.delete_project_callback import DeleteProjectCallbackCommand
 
 if TYPE_CHECKING:
     from ..storage import Storage
@@ -45,26 +47,26 @@ def create_command_system(
 ) -> tuple[CommandRegistry, CommandExecutor]:
     """
     Create and configure the command system with all commands.
-    
+
     Args:
         storage: Database storage instance
         access_control: Access control service instance
         model_name: Model name for semantic matching
         threshold: Similarity threshold for command matching
-        
+
     Returns:
         Tuple of (registry, executor)
     """
     logger.info("Creating command system...")
-    
+
     # Create registry
     registry = CommandRegistry(model_name=model_name, threshold=threshold)
-    
+
     # Create and register all commands
     commands = [
-        StartCommand(storage, access_control),
         HelpCommand(storage, access_control),
         BuildCommand(storage, access_control),
+        ReleaseCommand(storage, access_control),
         UsersCommand(storage, access_control),
         GroupsCommand(storage, access_control),
         RegisterGroupCommand(storage, access_control),
@@ -82,15 +84,16 @@ def create_command_system(
         BuildApkCallbackCommand(storage, access_control),
         ProjectSelectCallbackCommand(storage, access_control),
         PrepareReleaseCallbackCommand(storage, access_control),
+        ReleaseProjectCallbackCommand(storage, access_control),
+        DeleteProjectCallbackCommand(storage, access_control),
     ]
-    
+
     for cmd in commands:
         registry.register(cmd)
-    
+
     # Create executor
     executor = CommandExecutor(registry)
-    
-    logger.info(f"Command system created with {len(commands)} commands")
-    
-    return registry, executor
 
+    logger.info(f"Command system created with {len(commands)} commands")
+
+    return registry, executor

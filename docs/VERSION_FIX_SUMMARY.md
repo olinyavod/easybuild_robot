@@ -77,3 +77,5 @@ version: 1.0.4  # 3 части (major.minor.patch)
 2. `python/src/easybuild_bot/commands/implementations/prepare_release_callback.py`
 
 
+
+

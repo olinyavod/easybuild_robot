@@ -2,71 +2,71 @@
 /delete_project command implementation.
 """
 
-from typing import List, Optional
-from ..base import Command, CommandContext, CommandResult
+from typing import List
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from ..base import Command, CommandContext, CommandResult, CommandAccessLevel
 
 
 class DeleteProjectCommand(Command):
     """Delete project command - delete a project (admin only)."""
-    
+
     def get_command_name(self) -> str:
         return "/delete_project"
-    
+
     def get_semantic_tags(self) -> List[str]:
         return [
-            "удалить проект",
-            "удаление проекта",
-            "стереть проект",
-            "убрать проект"
+            "удалить проект из списка",
+            "удаление проекта из базы",
+            "стереть проект полностью",
+            "убрать проект из системы"
         ]
-    
-    async def can_execute(self, ctx: CommandContext) -> tuple[bool, Optional[str]]:
-        """Check if user has admin access."""
-        return await self._check_user_access(ctx.update, require_admin=True)
-    
+
+    def get_access_level(self) -> CommandAccessLevel:
+        """Команда доступна только админу в личном чате."""
+        return CommandAccessLevel.ADMIN
+
     async def execute(self, ctx: CommandContext) -> CommandResult:
         """Execute delete project command."""
-        # Parse command arguments
-        # Format: /delete_project <name>
-        
-        if not ctx.context.args or len(ctx.context.args) < 1:
-            usage_msg = (
-                "📝 **Использование команды /delete_project:**\n\n"
-                "```\n"
-                "/delete_project <название>\n"
-                "```\n\n"
-                "**Пример:**\n"
-                "```\n"
-                "/delete_project MyApp\n"
-                "```\n\n"
-                "⚠️ **Внимание:** Это действие нельзя отменить!"
-            )
-            await ctx.update.effective_message.reply_text(usage_msg, parse_mode="Markdown")
-            return CommandResult(success=False, error="Не указано название проекта")
-        
-        name = " ".join(ctx.context.args)
-        
-        # Get project
-        project = self.storage.get_project_by_name(name)
-        if not project:
-            error_msg = f"❌ Проект `{name}` не найден!"
-            await ctx.update.effective_message.reply_text(error_msg, parse_mode="Markdown")
-            return CommandResult(success=False, error=f"Проект {name} не найден")
-        
-        # Delete project
-        success = self.storage.delete_project(project.id)
-        
-        if success:
-            success_msg = (
-                f"🗑️ **Проект `{name}` успешно удален!**\n\n"
-                f"**Тип:** {project.project_type.value.replace('_', ' ').title()}\n"
-                f"**Git URL:** `{project.git_url}`\n"
-                f"**ID:** `{project.id}`"
-            )
-            await ctx.update.effective_message.reply_text(success_msg, parse_mode="Markdown")
-            return CommandResult(success=True, message=f"Проект {name} удален")
-        else:
-            error_msg = f"❌ Не удалось удалить проект `{name}`!"
-            await ctx.update.effective_message.reply_text(error_msg, parse_mode="Markdown")
-            return CommandResult(success=False, error=f"Не удалось удалить проект {name}")
+        # Get all projects
+        projects = self.storage.get_all_projects()
 
+        if not projects:
+            message = "📋 Нет проектов для удаления."
+            await ctx.update.effective_message.reply_text(message)
+            return CommandResult(success=True, message=message)
+
+        # Sort projects by name
+        sorted_projects = sorted(projects, key=lambda p: p.name.lower())
+
+        # Build inline keyboard with project list
+        keyboard = []
+        for project in sorted_projects:
+            # Project type emoji
+            type_emoji = {
+                "flutter": "🦋",
+                "dotnet_maui": "🔷",
+                "xamarin": "🔶"
+            }.get(project.project_type.value, "📦")
+
+            button_text = f"{type_emoji} {project.name}"
+            callback_data = f"delete_project:{project.id}"
+            keyboard.append([InlineKeyboardButton(button_text, callback_data=callback_data)])
+
+        # Add cancel button
+        keyboard.append([InlineKeyboardButton("❌ Отмена", callback_data="delete_project_cancel")])
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        message = (
+            "🗑️ **Удаление проекта**\n\n"
+            "Выберите проект для удаления:\n\n"
+            "⚠️ **Внимание:** Это действие нельзя отменить!"
+        )
+
+        await ctx.update.effective_message.reply_text(
+            message,
+            parse_mode="Markdown",
+            reply_markup=reply_markup
+        )
+
+        return CommandResult(success=True, message="Показан список проектов для удаления")

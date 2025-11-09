@@ -1,0 +1,73 @@
+{
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit",
+    "source.organizeImports": "explicit"
+  },
+
+  // Python настройки
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+    "editor.rulers": [100],
+    "editor.tabSize": 4
+  },
+
+  // Ruff настройки
+  "ruff.enable": true,
+  "ruff.lint.enable": true,
+  "ruff.format.enable": true,
+  "ruff.organizeImports": true,
+  "ruff.fixAll": true,
+  "ruff.configurationPreference": "filesystemFirst",
+
+  // MyPy настройки
+  "python.linting.enabled": true,
+  "python.linting.mypyEnabled": true,
+  "python.linting.mypyArgs": [
+    "--config-file=python/pyproject.toml"
+  ],
+
+  // Dart настройки
+  "[dart]": {
+    "editor.formatOnSave": true,
+    "editor.rulers": [80],
+    "editor.selectionHighlight": false,
+    "editor.suggest.snippetsPreventQuickSuggestions": false,
+    "editor.suggestSelection": "first",
+    "editor.tabCompletion": "onlySnippets",
+    "editor.wordBasedSuggestions": "off"
+  },
+
+  "dart.lineLength": 80,
+  "dart.analysisServerFolding": true,
+  "dart.closingLabels": true,
+  "dart.enableSnippets": true,
+
+  // Общие настройки
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+
+  // Исключения
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    "**/.pytest_cache": true,
+    "**/.mypy_cache": true,
+    "**/.ruff_cache": true,
+    "**/dart/.dart_tool": true,
+    "**/dart/build": true
+  },
+
+  // Отслеживание изменений
+  "files.watcherExclude": {
+    "**/__pycache__/**": true,
+    "**/.git/**": true,
+    "**/.ruff_cache/**": true,
+    "**/.mypy_cache/**": true,
+    "**/dart/.dart_tool/**": true,
+    "**/dart/build/**": true
+  }
+}
+

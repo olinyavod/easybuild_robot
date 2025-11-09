@@ -1,0 +1,55 @@
+# Pre-commit hooks для автоматической проверки кода перед коммитом
+# Установка: pre-commit install
+# Запуск вручную: pre-commit run --all-files
+
+repos:
+  # Базовые проверки
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        name: Удаление пробелов в конце строк
+      - id: end-of-file-fixer
+        name: Проверка окончания файлов
+      - id: check-yaml
+        name: Проверка YAML файлов
+      - id: check-added-large-files
+        name: Проверка больших файлов
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict
+        name: Проверка конфликтов слияния
+      - id: check-case-conflict
+        name: Проверка конфликтов регистра
+      - id: mixed-line-ending
+        name: Проверка окончаний строк
+        args: ['--fix=lf']
+
+  # Python: Ruff линтер
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.8
+    hooks:
+      - id: ruff
+        name: Ruff линтер
+        args: [--fix, --exit-non-zero-on-fix]
+        files: ^python/
+      - id: ruff-format
+        name: Ruff форматтер
+        files: ^python/
+
+  # Python: проверка типов с mypy
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.7.1
+    hooks:
+      - id: mypy
+        name: MyPy проверка типов
+        files: ^python/src/
+        args: [--config-file=python/pyproject.toml]
+        additional_dependencies:
+          - types-requests
+
+# Настройки
+default_language_version:
+  python: python3.9
+
+fail_fast: false
+

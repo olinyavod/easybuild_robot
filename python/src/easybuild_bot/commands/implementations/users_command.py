@@ -2,8 +2,8 @@
 /users command implementation.
 """
 
-from typing import List, Optional
-from ..base import Command, CommandContext, CommandResult
+from typing import List
+from ..base import Command, CommandContext, CommandResult, CommandAccessLevel
 
 
 class UsersCommand(Command):
@@ -21,9 +21,9 @@ class UsersCommand(Command):
             "юзеры"
         ]
     
-    async def can_execute(self, ctx: CommandContext) -> tuple[bool, Optional[str]]:
-        """Check if user has admin access."""
-        return await self._check_user_access(ctx.update, require_admin=True)
+    def get_access_level(self) -> CommandAccessLevel:
+        """Команда доступна только админу в личном чате."""
+        return CommandAccessLevel.ADMIN
     
     async def execute(self, ctx: CommandContext) -> CommandResult:
         """Execute users command."""
