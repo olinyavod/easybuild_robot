@@ -160,3 +160,6 @@ fix: экранированы скобки в MarkdownV2 в show_group_selection
 ```
 
 
+
+
+

@@ -216,3 +216,6 @@ async def execute(self, ctx: CommandContext) -> CommandResult:
 - Нет проектов → показывает соответствующее сообщение
 
 
+
+
+

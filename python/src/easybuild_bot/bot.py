@@ -512,12 +512,12 @@ class EasyBuildBot:
         add_project_conv = ConversationHandler(
             entry_points=[CommandHandler("add_project", self.add_project_wizard.start)],
             states={
-                WAITING_NAME: [MessageHandler(filters.TEXT & (~filters.COMMAND), self.add_project_wizard.receive_name)],
+                WAITING_NAME: [MessageHandler(filters.TEXT, self.add_project_wizard.receive_name)],
                 WAITING_TYPE: [CallbackQueryHandler(self.add_project_wizard.receive_type, pattern="^type_")],
-                WAITING_GIT_URL: [MessageHandler(filters.TEXT & (~filters.COMMAND), self.add_project_wizard.receive_git_url)],
-                WAITING_PROJECT_FILE_PATH: [MessageHandler(filters.TEXT & (~filters.COMMAND), self.add_project_wizard.receive_project_file_path)],
-                WAITING_DEV_BRANCH: [MessageHandler(filters.TEXT & (~filters.COMMAND), self.add_project_wizard.receive_dev_branch)],
-                WAITING_RELEASE_BRANCH: [MessageHandler(filters.TEXT & (~filters.COMMAND), self.add_project_wizard.receive_release_branch)],
+                WAITING_GIT_URL: [MessageHandler(filters.TEXT, self.add_project_wizard.receive_git_url)],
+                WAITING_PROJECT_FILE_PATH: [MessageHandler(filters.TEXT, self.add_project_wizard.receive_project_file_path)],
+                WAITING_DEV_BRANCH: [MessageHandler(filters.TEXT, self.add_project_wizard.receive_dev_branch)],
+                WAITING_RELEASE_BRANCH: [MessageHandler(filters.TEXT, self.add_project_wizard.receive_release_branch)],
                 ADD_PROJECT_CONFIRM: [CallbackQueryHandler(self.add_project_wizard.confirm_creation, pattern="^confirm_")],
             },
             fallbacks=[CommandHandler("cancel", self.add_project_wizard.cancel)],
@@ -531,7 +531,7 @@ class EasyBuildBot:
             states={
                 SELECT_PROJECT: [CallbackQueryHandler(self.edit_project_wizard.select_project, pattern="^(edit_select_|edit_cancel)")],
                 SELECT_FIELD: [CallbackQueryHandler(self.edit_project_wizard.select_field, pattern="^(edit_field_|edit_save|edit_cancel)")],
-                EDIT_VALUE: [MessageHandler(filters.TEXT & (~filters.COMMAND), self.edit_project_wizard.receive_value)],
+                EDIT_VALUE: [MessageHandler(filters.TEXT, self.edit_project_wizard.receive_value)],
                 SELECT_GROUP: [CallbackQueryHandler(self.edit_project_wizard.handle_group_selection, pattern="^(select_group_|group_back)")],
             },
             fallbacks=[CommandHandler("cancel", self.edit_project_wizard.cancel)],

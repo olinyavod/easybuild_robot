@@ -80,3 +80,6 @@ bash full_restart.sh
 - Зарегистрировано 8 callback команд
 - Настроены обработчики для ConversationHandler
 - Application started успешно
+
+
+

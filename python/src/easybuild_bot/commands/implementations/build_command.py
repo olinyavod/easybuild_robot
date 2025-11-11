@@ -5,6 +5,7 @@
 from typing import List
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from ..base import Command, CommandContext, CommandResult, CommandAccessLevel
+from ...services import GitService
 
 
 class BuildCommand(Command):
@@ -123,9 +124,9 @@ class BuildCommand(Command):
                         # Extract the directory name for cloning
                         repo_name = os.path.basename(repo_path)
 
-                        # Clone repository with submodules
+                        # Clone repository WITHOUT submodules
                         result = subprocess.run(
-                            ["git", "clone", "--recurse-submodules", project.git_url, repo_name],
+                            ["git", "clone", project.git_url, repo_name],
                             cwd=parent_dir,
                             capture_output=True,
                             text=True,
@@ -205,13 +206,8 @@ class BuildCommand(Command):
                             timeout=120
                         )
 
-                        # Update submodules
-                        subprocess.run(
-                            ["git", "-C", repo_path, "submodule", "update", "--init", "--recursive"],
-                            capture_output=True,
-                            text=True,
-                            timeout=120
-                        )
+                        # Note: Submodules are NOT updated automatically
+                        # If you need submodules, add them manually
 
                     except subprocess.TimeoutExpired:
                         try:

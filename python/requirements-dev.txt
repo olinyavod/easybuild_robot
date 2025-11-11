@@ -13,3 +13,6 @@ pytest-asyncio>=0.21.0  # Поддержка async тестов
 # Дополнительные инструменты
 pre-commit>=3.5.0    # Хуки для git pre-commit
 
+
+
+

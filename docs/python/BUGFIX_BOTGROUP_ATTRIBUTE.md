@@ -141,3 +141,6 @@ fix: исправлен AttributeError при работе с BotGroup
 ```
 
 
+
+
+

@@ -174,3 +174,6 @@ def get_projects_for_group(self, group_id: int) -> List[Project]:
 12. ✅ Должны показаться все 3 проекта
 
 
+
+
+

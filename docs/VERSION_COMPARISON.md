@@ -135,3 +135,6 @@ grep -A1 "ApplicationDisplayVersion" TechnouprApp.Client/TechnouprApp.Client.csp
 
 
 
+
+
+

@@ -133,3 +133,6 @@ class DeleteProjectCallbackCommand(CallbackCommand):
                 return CommandResult(success=False, error=f"Не удалось удалить проект {project.name}")
 
         return CommandResult(success=False, error="Unknown callback action")
+
+
+

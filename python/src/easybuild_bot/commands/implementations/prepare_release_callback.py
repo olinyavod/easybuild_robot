@@ -97,21 +97,34 @@ class PrepareReleaseCallbackCommand(CallbackCommand):
         if not current_version:
             # Формируем сообщение об ошибке в зависимости от типа проекта
             if project.project_type.value == "xamarin":
+                # Получаем детальную диагностическую информацию
+                diagnostic_info = ""
+                if hasattr(version_service, 'get_version_diagnostic_info'):
+                    diagnostic_info = version_service.get_version_diagnostic_info(project)
+
                 error_msg = (
-                    f"❌ Не удалось определить текущую версию проекта {project.name}\n"
-                    f"Ветка релиза: `{project.release_branch}`\n"
-                    f"Файл проекта: `{project.project_file_path}`\n\n"
-                    f"Для проектов Xamarin версия ищется в платформенных файлах:\n"
-                    f"  • `*.Android.csproj` или `*.Droid.csproj`\n"
-                    f"  • `*.iOS.csproj`\n\n"
-                    f"Убедитесь, что в платформенных файлах есть теги версий:\n\n"
-                    f"**Для Android:**\n"
-                    f"  • `<ApplicationVersion>X.Y.Z</ApplicationVersion>`\n"
-                    f"  • `<AndroidVersionCode>N</AndroidVersionCode>`\n\n"
-                    f"**Для iOS:**\n"
-                    f"  • `<ApplicationVersion>X.Y.Z</ApplicationVersion>`\n"
-                    f"  • `<CFBundleVersion>X.Y.Z</CFBundleVersion>`"
+                    f"❌ Не удалось определить текущую версию проекта **{project.name}**\n\n"
+                    f"📋 **Информация о проекте:**\n"
+                    f"   • Ветка релиза: `{project.release_branch}`\n"
+                    f"   • Файл проекта: `{project.project_file_path}`\n"
                 )
+
+                if diagnostic_info:
+                    error_msg += f"\n🔍 **Диагностика:**\n{diagnostic_info}\n"
+                else:
+                    # Fallback на старое сообщение, если диагностика недоступна
+                    error_msg += (
+                        f"\nДля проектов Xamarin версия ищется в платформенных файлах:\n"
+                        f"  • `*.Android.csproj` или `*.Droid.csproj`\n"
+                        f"  • `*.iOS.csproj`\n\n"
+                        f"Убедитесь, что в платформенных файлах есть теги версий:\n\n"
+                        f"**Для Android:**\n"
+                        f"  • `<ApplicationVersion>X.Y.Z</ApplicationVersion>`\n"
+                        f"  • `<AndroidVersionCode>N</AndroidVersionCode>`\n\n"
+                        f"**Для iOS:**\n"
+                        f"  • `<ApplicationVersion>X.Y.Z</ApplicationVersion>`\n"
+                        f"  • `<CFBundleVersion>X.Y.Z</CFBundleVersion>`"
+                    )
             elif project.project_type.value == "dotnet_maui":
                 error_msg = (
                     f"❌ Не удалось определить текущую версию проекта {project.name}\n"

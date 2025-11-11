@@ -104,3 +104,6 @@ async def can_execute(self, ctx: CommandContext) -> tuple[bool, Optional[str]]:
 - Доступ к проектам из неразрешенных групп
 
 
+
+
+
