@@ -96,3 +96,5 @@ tail -100 /home/olinyavod/projects/easybuild_bot/python/bot.log | grep -A 20 "О
 ## 📚 Подробная документация
 
 См. `docs/XAMARIN_VERSION_LOGGING_FIX.md` для полного описания изменений.
+
+

@@ -87,3 +87,5 @@ cd /home/olinyavod/projects/easybuild_bot/python
 ```bash
 sudo systemctl restart easybuild_bot_py
 ```
+
+

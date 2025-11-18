@@ -185,3 +185,5 @@ python3 scripts/check_xamarin_structure.py /home/olinyavod/projects/easybuild_bo
 ```
 
 Это позволит точно определить, в чём проблема.
+
+

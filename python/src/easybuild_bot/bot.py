@@ -410,15 +410,16 @@ class EasyBuildBot:
 
         # In groups respond only if bot is addressed
         if chat.type in ("group", "supergroup"):
+            # Ignore replies to bot's own messages
+            if message.reply_to_message and message.reply_to_message.from_user and message.reply_to_message.from_user.id == context.bot.id:
+                return
+
             addressed = False
 
-            if message.reply_to_message and message.reply_to_message.from_user and message.reply_to_message.from_user.id == context.bot.id:
+            # Check if bot is mentioned with @username
+            bot_username = context.bot.username
+            if bot_username and f"@{bot_username.lower()}" in message.text.lower():
                 addressed = True
-
-            if not addressed:
-                bot_username = context.bot.username
-                if bot_username and f"@{bot_username.lower()}" in message.text.lower():
-                    addressed = True
 
             if not addressed and message.entities:
                 for entity in message.entities:
